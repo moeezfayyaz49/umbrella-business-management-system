@@ -32,7 +32,7 @@ CREATE TABLE public.company_settings (
 CREATE TABLE public.clients (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
-  phone TEXT,
+  phones TEXT[] DEFAULT '{}',
   address TEXT,
   opening_balance NUMERIC(10, 2) NOT NULL DEFAULT 0,
   notes TEXT,
@@ -56,7 +56,7 @@ CREATE TABLE public.client_ledger_entries (
 CREATE TABLE public.vendors (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
-  phone TEXT,
+  phones TEXT[] DEFAULT '{}',
   address TEXT,
   opening_balance NUMERIC(10, 2) NOT NULL DEFAULT 0,
   notes TEXT,

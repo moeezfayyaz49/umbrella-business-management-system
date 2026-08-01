@@ -28,7 +28,7 @@ export const ClientList = ({ clients, isLoading, onEdit, onDelete }: Props) => {
         <TableHead>
           <TableRow>
             <TableCell>Name</TableCell>
-            <TableCell>Phone</TableCell>
+            <TableCell>Phones</TableCell>
             <TableCell align="right">Opening Balance</TableCell>
             <TableCell align="center">Actions</TableCell>
           </TableRow>
@@ -50,7 +50,7 @@ export const ClientList = ({ clients, isLoading, onEdit, onDelete }: Props) => {
             clients.map((client) => (
               <TableRow key={client.id} hover>
                 <TableCell>{client.name}</TableCell>
-                <TableCell>{client.phone || '-'}</TableCell>
+                <TableCell>{client.phones?.join(', ') || '-'}</TableCell>
                 <TableCell align="right">
                   {formatCurrency(client.opening_balance, settings?.currency)}
                 </TableCell>

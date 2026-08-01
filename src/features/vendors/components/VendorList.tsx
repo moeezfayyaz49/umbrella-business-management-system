@@ -28,7 +28,7 @@ export const VendorList = ({ vendors, isLoading, onEdit, onDelete }: Props) => {
         <TableHead>
           <TableRow>
             <TableCell>Name</TableCell>
-            <TableCell>Phone</TableCell>
+            <TableCell>Phones</TableCell>
             <TableCell align="right">Opening Balance</TableCell>
             <TableCell align="center">Actions</TableCell>
           </TableRow>
@@ -50,7 +50,7 @@ export const VendorList = ({ vendors, isLoading, onEdit, onDelete }: Props) => {
             vendors.map((vendor) => (
               <TableRow key={vendor.id} hover>
                 <TableCell>{vendor.name}</TableCell>
-                <TableCell>{vendor.phone || '-'}</TableCell>
+                <TableCell>{vendor.phones?.join(', ') || '-'}</TableCell>
                 <TableCell align="right">
                   {formatCurrency(vendor.opening_balance, settings?.currency)}
                 </TableCell>
