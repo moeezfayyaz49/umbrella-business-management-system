@@ -1,7 +1,7 @@
 export interface Vendor {
   id: string;
   name: string;
-  phone?: string;
+  phones?: string[];
   address?: string;
   opening_balance: number;
   notes?: string;

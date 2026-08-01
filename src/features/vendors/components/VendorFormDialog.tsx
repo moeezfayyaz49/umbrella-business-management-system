@@ -1,7 +1,9 @@
 import { 
   Dialog, DialogTitle, DialogContent, DialogActions, 
-  Button, TextField, Box 
+  Button, TextField, Box, IconButton, Stack, Typography 
 } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { vendorSchema } from '../schemas';
@@ -21,12 +23,14 @@ export const VendorFormDialog = ({ open, onClose, onSubmit, initialData }: Props
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<VendorFormInputs>({
     resolver: zodResolver(vendorSchema),
     defaultValues: {
       name: '',
-      phone: '',
+      phones: [],
       address: '',
       opening_balance: 0,
       notes: '',
@@ -37,7 +41,7 @@ export const VendorFormDialog = ({ open, onClose, onSubmit, initialData }: Props
     if (initialData && open) {
       reset({
         name: initialData.name,
-        phone: initialData.phone || '',
+        phones: initialData.phones || [],
         address: initialData.address || '',
         opening_balance: initialData.opening_balance,
         notes: initialData.notes || '',
@@ -45,13 +49,15 @@ export const VendorFormDialog = ({ open, onClose, onSubmit, initialData }: Props
     } else if (open) {
       reset({
         name: '',
-        phone: '',
+        phones: [],
         address: '',
         opening_balance: 0,
         notes: '',
       });
     }
   }, [initialData, open, reset]);
+
+  const phones = watch('phones') || [];
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -66,14 +72,36 @@ export const VendorFormDialog = ({ open, onClose, onSubmit, initialData }: Props
             error={!!errors.name}
             helperText={errors.name?.message}
           />
-          <TextField
-            fullWidth
-            label="Phone"
-            margin="normal"
-            {...register('phone')}
-            error={!!errors.phone}
-            helperText={errors.phone?.message}
-          />
+          <Box sx={{ mt: 2, mb: 1 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary">Phone Numbers</Typography>
+              <Button 
+                startIcon={<AddIcon />} 
+                onClick={() => setValue('phones', [...phones, ''])}
+                size="small"
+              >
+                Add Phone
+              </Button>
+            </Box>
+            {phones.map((phone, index) => (
+              <Stack direction="row" spacing={1} key={index} sx={{ mb: 1 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label={`Phone ${index + 1}`}
+                  {...register(`phones.${index}` as const)}
+                  error={!!errors.phones?.[index]}
+                  helperText={errors.phones?.[index]?.message}
+                />
+                <IconButton 
+                  color="error" 
+                  onClick={() => setValue('phones', phones.filter((_, i) => i !== index))}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Stack>
+            ))}
+          </Box>
           <TextField
             fullWidth
             label="Address"
