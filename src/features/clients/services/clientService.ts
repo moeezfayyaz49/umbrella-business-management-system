@@ -1,7 +1,6 @@
 import type { Client, ClientLedgerEntry } from '../types';
 import type { ClientFormInputs } from '../schemas';
 import { supabase } from '../../../lib/supabase';
-import dayjs from 'dayjs';
 
 export const clientService = {
   getClients: async (searchQuery?: string): Promise<Client[]> => {
@@ -90,9 +89,9 @@ export const clientService = {
     let runningBalance = Number(client.opening_balance || 0);
     const computedEntries = (entries || []).map(entry => {
       runningBalance = runningBalance + Number(entry.debit || 0) - Number(entry.credit || 0);
-      return { 
-        ...entry, 
-        running_balance: runningBalance 
+      return {
+        ...entry,
+        running_balance: runningBalance
       } as ClientLedgerEntry;
     });
 

@@ -1,4 +1,4 @@
-import type { Purchase, PurchaseItem } from '../types';
+import type { Purchase } from '../types';
 import type { PurchaseFormInputs } from '../schemas';
 import { supabase } from '../../../lib/supabase';
 
@@ -8,7 +8,7 @@ const calculateTotals = (data: PurchaseFormInputs) => {
   const taxAmount = afterDiscount * (data.tax_rate / 100);
   const total_amount = afterDiscount + taxAmount;
   const remaining_amount = total_amount - data.paid_amount;
-  
+
   return { total_amount, remaining_amount };
 };
 

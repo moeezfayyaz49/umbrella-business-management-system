@@ -1,7 +1,6 @@
 import type { CompanySettings } from '../types';
 import type { SettingsFormInputs } from '../schemas';
 import { supabase } from '../../../lib/supabase';
-import dayjs from 'dayjs';
 
 const defaultSettings: Omit<CompanySettings, 'id' | 'updated_at'> = {
   company_name: 'My Company',
@@ -31,7 +30,7 @@ export const settingsService = {
         .insert([defaultSettings])
         .select()
         .single();
-      
+
       if (insertError) throw insertError;
       return newData as CompanySettings;
     }

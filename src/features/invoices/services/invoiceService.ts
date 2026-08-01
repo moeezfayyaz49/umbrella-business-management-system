@@ -1,4 +1,4 @@
-import type { Invoice, InvoiceItem } from '../types';
+import type { Invoice } from '../types';
 import type { InvoiceFormInputs } from '../schemas';
 import { supabase } from '../../../lib/supabase';
 
@@ -8,7 +8,7 @@ const calculateTotals = (data: InvoiceFormInputs) => {
   const taxAmount = afterDiscount * (data.tax_rate / 100);
   const total_amount = afterDiscount + taxAmount;
   const remaining_amount = total_amount - data.paid_amount;
-  
+
   return { total_amount, remaining_amount };
 };
 
@@ -128,15 +128,15 @@ export const invoiceService = {
 
   updateInvoiceItemCosts: async (itemCosts: { id: string, cost: number }[]): Promise<void> => {
     // Update each item's cost
-    const promises = itemCosts.map(item => 
+    const promises = itemCosts.map(item =>
       supabase
         .from('invoice_items')
         .update({ cost: item.cost })
         .eq('id', item.id)
     );
-    
+
     const results = await Promise.all(promises);
-    
+
     // Check for any errors
     const error = results.find(result => result.error)?.error;
     if (error) throw error;

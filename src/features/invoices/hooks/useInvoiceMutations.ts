@@ -4,7 +4,7 @@ import type { InvoiceFormInputs } from '../schemas';
 
 export const useCreateInvoice = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: InvoiceFormInputs) => invoiceService.createInvoice(data),
     onSuccess: () => {
@@ -15,7 +15,7 @@ export const useCreateInvoice = () => {
 
 export const useUpdateInvoice = (id: string) => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: InvoiceFormInputs) => invoiceService.updateInvoice(id, data),
     onSuccess: () => {
@@ -27,7 +27,7 @@ export const useUpdateInvoice = (id: string) => {
 
 export const useDeleteInvoice = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (id: string) => invoiceService.deleteInvoice(id),
     onSuccess: () => {
@@ -38,9 +38,9 @@ export const useDeleteInvoice = () => {
 
 export const useUpdateInvoiceItemCosts = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: ({ invoiceId, itemCosts }: { invoiceId: string, itemCosts: { id: string, cost: number }[] }) => invoiceService.updateInvoiceItemCosts(itemCosts),
+    mutationFn: ({ itemCosts }: { invoiceId: string, itemCosts: { id: string, cost: number }[] }) => invoiceService.updateInvoiceItemCosts(itemCosts),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['invoices', variables.invoiceId] });
