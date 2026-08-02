@@ -76,7 +76,39 @@ export const InvoiceView = () => {
         </Table>
       </TableContainer>
 
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mr: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 4, mr: 2 }}>
+        <Box sx={{ flexGrow: 1, maxWidth: 400 }}>
+          {invoice.transport_company && (
+            <Box>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>TRANSPORT DETAILS</Typography>
+              <Paper variant="outlined" sx={{ p: 2, backgroundColor: 'rgba(0,0,0,0.02)' }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+                  <Typography variant="body2" color="text.secondary">Company:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 'medium' }}>{invoice.transport_company}</Typography>
+                  
+                  <Typography variant="body2" color="text.secondary">Bilty No:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 'medium' }}>{invoice.transport_bilty_number || '-'}</Typography>
+                  
+                  <Typography variant="body2" color="text.secondary">Destination:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 'medium' }}>{invoice.transport_destination_city || '-'}</Typography>
+                  
+                  <Typography variant="body2" color="text.secondary">Charges:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 'medium' }}>{formatCurrency(invoice.transport_charges || 0, settings?.currency)}</Typography>
+                  
+                  <Typography variant="body2" color="text.secondary">Paid By:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 'medium' }}>{invoice.transport_paid_by}</Typography>
+                  
+                  {invoice.transport_remarks && (
+                    <>
+                      <Typography variant="body2" color="text.secondary">Remarks:</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 'medium' }}>{invoice.transport_remarks}</Typography>
+                    </>
+                  )}
+                </Box>
+              </Paper>
+            </Box>
+          )}
+        </Box>
         <Box sx={{ minWidth: 250 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
             <Typography>Subtotal</Typography>

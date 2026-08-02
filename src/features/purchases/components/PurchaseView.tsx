@@ -60,7 +60,35 @@ export const PurchaseView = ({ purchase }: { purchase: Purchase }) => {
         </Table>
       </TableContainer>
 
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 4 }}>
+        <Box sx={{ flexGrow: 1, maxWidth: 400 }}>
+          {purchase.transport_company && (
+            <Box>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>TRANSPORT DETAILS</Typography>
+              <Paper variant="outlined" sx={{ p: 2, backgroundColor: 'rgba(0,0,0,0.02)' }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+                  <Typography variant="body2" color="text.secondary">Company:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 'medium' }}>{purchase.transport_company}</Typography>
+                  
+                  <Typography variant="body2" color="text.secondary">Bilty No:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 'medium' }}>{purchase.transport_bilty_number || '-'}</Typography>
+                  
+                  <Typography variant="body2" color="text.secondary">From:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 'medium' }}>{purchase.transport_from_city || '-'}</Typography>
+                  
+                  <Typography variant="body2" color="text.secondary">Charges:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 'medium' }}>{formatCurrency(purchase.transport_charges || 0, settings?.currency)}</Typography>
+                  
+                  <Typography variant="body2" color="text.secondary">Paid By:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 'medium' }}>{purchase.transport_paid_by}</Typography>
+                  
+                  <Typography variant="body2" color="text.secondary">Status:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 'medium' }}>{purchase.transport_payment_status}</Typography>
+                </Box>
+              </Paper>
+            </Box>
+          )}
+        </Box>
         <Box sx={{ width: 300 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
             <Typography>Subtotal</Typography>

@@ -1,10 +1,12 @@
 import {
   Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, CircularProgress,
-  IconButton, Box, Typography, Chip
+  IconButton, Box, Typography, Chip, Tooltip
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import type { Expense } from '../types';
 import { useExpenseCategories } from '../hooks/useExpenseCategories';
@@ -21,6 +23,7 @@ interface Props {
 export const ExpenseList = ({ expenses, isLoading, onEdit, onDelete }: Props) => {
   const { data: settings } = useSettings();
   const { data: categories } = useExpenseCategories();
+  const navigate = useNavigate();
 
   const getCategoryName = (id: string) => {
     return categories?.find(c => c.id === id)?.name || 'Unknown';
@@ -66,6 +69,13 @@ export const ExpenseList = ({ expenses, isLoading, onEdit, onDelete }: Props) =>
                 </TableCell>
                 <TableCell align="center">
                   <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                    {expense.purchase_id && (
+                      <Tooltip title="View Purchase">
+                        <IconButton size="small" color="info" onClick={() => navigate(`/purchases/${expense.purchase_id}`)}>
+                          <ShoppingCartIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
                     <IconButton size="small" color="primary" onClick={() => onEdit(expense)}>
                       <EditIcon fontSize="small" />
                     </IconButton>

@@ -7,6 +7,7 @@ export interface ExpenseCategory {
 export interface Expense {
   id: string;
   category_id: string;
+  purchase_id?: string;
   date: string;
   amount: number;
   reference?: string;
