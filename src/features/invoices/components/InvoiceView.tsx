@@ -45,7 +45,7 @@ export const InvoiceView = () => {
           <Typography variant="subtitle2" color="text.secondary">BILL TO</Typography>
           <Typography variant="h6">{client?.name || 'Loading...'}</Typography>
           <Typography variant="body2">{client?.address}</Typography>
-          <Typography variant="body2">{client?.phone}</Typography>
+          <Typography variant="body2">{client?.phones?.join(', ') || '-'}</Typography>
         </Box>
         <Box sx={{ textAlign: 'right' }}>
           <Typography variant="subtitle2" color="text.secondary">DATE</Typography>
