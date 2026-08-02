@@ -2,7 +2,7 @@ import { Box, Typography } from '@mui/material';
 import { DashboardMetricCard } from '../../features/dashboard/components/DashboardMetricCard';
 import { DashboardMetricCardWithPeriod } from '../../features/dashboard/components/DashboardMetricCardWithPeriod';
 import { RecentTransactionsTable } from '../../features/dashboard/components/RecentTransactionsTable';
-import { useDashboardMetrics, useClientReceivables, useVendorPayables, useTotalProfit } from '../../features/dashboard/hooks/useDashboardMetrics';
+import { useDashboardMetrics, useClientReceivables, useVendorPayables, useTotalProfit, useTotalExpense } from '../../features/dashboard/hooks/useDashboardMetrics';
 import { useRecentTransactions } from '../../features/dashboard/hooks/useRecentTransactions';
 
 export const Dashboard = () => {
@@ -64,6 +64,13 @@ export const Dashboard = () => {
             title="Total Profit"
             fetchData={useTotalProfit}
             color="success.dark"
+          />
+        </Box>
+        <Box>
+          <DashboardMetricCardWithPeriod
+            title="Total Expense"
+            fetchData={useTotalExpense}
+            color="error.dark"
           />
         </Box>
       </Box>

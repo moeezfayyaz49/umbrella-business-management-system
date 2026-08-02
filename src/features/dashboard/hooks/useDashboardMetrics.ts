@@ -28,3 +28,10 @@ export const useTotalProfit = (year: number, month: number) => {
     queryFn: () => dashboardService.getTotalProfit(year, month),
   });
 };
+
+export const useTotalExpense = (year: number, month: number) => {
+  return useQuery({
+    queryKey: ['dashboard', 'totalExpense', year, month],
+    queryFn: () => dashboardService.getTotalExpense(year, month),
+  });
+};
