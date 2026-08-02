@@ -14,12 +14,13 @@ export const Vendors = () => {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const { data: vendors, isLoading } = useVendors(debouncedSearchTerm);
-  const createMutation = useCreateVendor();
-  const updateMutation = useUpdateVendor(''); // ID is set below
-  const deleteMutation = useDeleteVendor();
-
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | undefined>();
+
+  const createMutation = useCreateVendor();
+  const updateMutation = useUpdateVendor(editingVendor?.id || ''); // Dynamically pass ID
+  const deleteMutation = useDeleteVendor();
 
   const handleOpenDialog = (vendor?: Vendor) => {
     setEditingVendor(vendor);

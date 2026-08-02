@@ -14,12 +14,13 @@ export const Clients = () => {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const { data: clients, isLoading } = useClients(debouncedSearchTerm);
-  const createMutation = useCreateClient();
-  const updateMutation = useUpdateClient(''); // The ID will be set dynamically below
-  const deleteMutation = useDeleteClient();
-
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | undefined>();
+
+  const createMutation = useCreateClient();
+  const updateMutation = useUpdateClient(editingClient?.id || ''); // Dynamically pass ID
+  const deleteMutation = useDeleteClient();
 
   const handleOpenDialog = (client?: Client) => {
     setEditingClient(client);
