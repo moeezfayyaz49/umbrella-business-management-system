@@ -34,7 +34,7 @@ export const ClientLedger = ({ client, ledgerEntries, isLoading, onEditTransacti
             {client?.address}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Phone: {client?.phone}
+            Phone: {client?.phones?.join(', ') || '-'}
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 2 }}>
