@@ -27,7 +27,7 @@ export const VendorFormDialog = ({ open, onClose, onSubmit, initialData }: Props
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<VendorFormInputs>({
-    resolver: zodResolver(vendorSchema),
+    resolver: zodResolver(vendorSchema)as any,
     defaultValues: {
       name: '',
       phones: [],
@@ -83,7 +83,7 @@ export const VendorFormDialog = ({ open, onClose, onSubmit, initialData }: Props
                 Add Phone
               </Button>
             </Box>
-            {phones.map((phone, index) => (
+            {phones.map((_, index) => (
               <Stack direction="row" spacing={1} key={index} sx={{ mb: 1 }}>
                 <TextField
                   fullWidth

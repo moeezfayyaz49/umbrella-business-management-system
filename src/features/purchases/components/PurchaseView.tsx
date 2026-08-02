@@ -28,7 +28,7 @@ export const PurchaseView = ({ purchase }: { purchase: Purchase }) => {
           <Typography variant="subtitle2" color="text.secondary">VENDOR / SUPPLIER</Typography>
           <Typography variant="h6">{vendor?.name || 'Loading...'}</Typography>
           <Typography variant="body2">{vendor?.address}</Typography>
-          <Typography variant="body2">{vendor?.phone}</Typography>
+          <Typography variant="body2">{vendor?.phones?.join(', ') || '-'}</Typography>
         </Box>
         <Box sx={{ textAlign: 'right' }}>
           <Typography variant="subtitle2" color="text.secondary">DATE</Typography>
