@@ -17,9 +17,10 @@ export const PurchaseView = ({ purchase }: { purchase: Purchase }) => {
           <Typography variant="body1" color="text.secondary"># {purchase.purchase_number}</Typography>
         </Box>
         <Box sx={{ textAlign: 'right' }}>
-          <Typography variant="h6">My Business</Typography>
-          <Typography variant="body2">123 Main Street</Typography>
-          <Typography variant="body2">City, State 12345</Typography>
+          <Typography variant="h6">{settings?.company_name}</Typography>
+          <Typography variant="body2">{settings?.phone}</Typography>
+          <Typography variant="body2">{settings?.email}</Typography>
+          <Typography variant="body2">{settings?.address}</Typography>
         </Box>
       </Box>
 
