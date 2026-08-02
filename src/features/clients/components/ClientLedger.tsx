@@ -36,6 +36,11 @@ export const ClientLedger = ({ client, ledgerEntries, isLoading, onEditTransacti
           <Typography variant="body2" color="text.secondary">
             Phone: {client?.phones?.join(', ') || '-'}
           </Typography>
+          {client?.notes && (
+            <Typography variant="body2" color="text.secondary">
+              Notes: {client.notes}
+            </Typography>
+          )}
         </Box>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button variant="outlined" startIcon={<PrintIcon />} onClick={() => window.print()}>
