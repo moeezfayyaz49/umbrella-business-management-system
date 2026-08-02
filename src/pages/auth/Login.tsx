@@ -1,4 +1,4 @@
-import { Box, Button, TextField, Typography } from '@mui/material';
+import { Box, Button, TextField, Typography, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,6 +20,27 @@ export const Login = () => {
   const { setUser, setLoading } = useAuthStore();
   const navigate = useNavigate();
   const [authError, setAuthError] = useState<string | null>(null);
+
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [forgotPasswordMessage, setForgotPasswordMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+  const handleForgotPasswordSubmit = async () => {
+    if (!forgotPasswordEmail) return;
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail);
+      if (error) throw error;
+      setForgotPasswordMessage({ type: 'success', text: 'Password reset link sent to your email.' });
+    } catch (err: any) {
+      setForgotPasswordMessage({ type: 'error', text: err.message || 'Failed to send reset link.' });
+    }
+  };
+
+  const handleForgotPasswordClose = () => {
+    setForgotPasswordOpen(false);
+    setForgotPasswordEmail('');
+    setForgotPasswordMessage(null);
+  };
 
   const {
     register,
@@ -101,6 +122,41 @@ export const Login = () => {
       <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
         Sign In
       </Button>
+      <Box sx={{ textAlign: 'center' }}>
+        <Button onClick={() => setForgotPasswordOpen(true)} variant="text" size="small">
+          Forgot Password?
+        </Button>
+      </Box>
+
+      <Dialog open={forgotPasswordOpen} onClose={handleForgotPasswordClose}>
+        <DialogTitle>Reset Password</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Enter your email address and we'll send you a link to reset your password.
+          </DialogContentText>
+          {forgotPasswordMessage && (
+            <Alert severity={forgotPasswordMessage.type} sx={{ mb: 2 }}>
+              {forgotPasswordMessage.text}
+            </Alert>
+          )}
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Email Address"
+            type="email"
+            fullWidth
+            variant="outlined"
+            value={forgotPasswordEmail}
+            onChange={(e) => setForgotPasswordEmail(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleForgotPasswordClose}>Cancel</Button>
+          <Button onClick={handleForgotPasswordSubmit} variant="contained">
+            Send Link
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

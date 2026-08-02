@@ -10,7 +10,7 @@ export const clientService = {
       .order('created_at', { ascending: false });
 
     if (searchQuery) {
-      query = query.or(`name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%,address.ilike.%${searchQuery}%`);
+      query = query.or(`name.ilike.%${searchQuery}%,address.ilike.%${searchQuery}%`);
     }
 
     const { data, error } = await query;

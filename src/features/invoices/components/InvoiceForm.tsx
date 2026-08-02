@@ -1,7 +1,9 @@
 import {
   Box, Button, TextField, Typography, Paper,
-  IconButton, Divider, Select, MenuItem, FormControl, InputLabel
+  IconButton, Divider, Select, MenuItem, FormControl, InputLabel,
+  Accordion, AccordionSummary, AccordionDetails
 } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -44,6 +46,12 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
       discount: 0,
       tax_rate: 0,
       paid_amount: 0,
+      transport_company: '',
+      transport_bilty_number: '',
+      transport_destination_city: '',
+      transport_charges: 0,
+      transport_paid_by: 'Client',
+      transport_remarks: '',
       items: [{ description: '', quantity: 1, unit_price: 0 }],
     },
   });
@@ -76,6 +84,12 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
         discount: initialData.discount,
         tax_rate: initialData.tax_rate,
         paid_amount: initialData.paid_amount,
+        transport_company: initialData.transport_company || '',
+        transport_bilty_number: initialData.transport_bilty_number || '',
+        transport_destination_city: initialData.transport_destination_city || '',
+        transport_charges: initialData.transport_charges || 0,
+        transport_paid_by: initialData.transport_paid_by || 'Client',
+        transport_remarks: initialData.transport_remarks || '',
         items: initialData.items.map(i => ({
           description: i.description,
           quantity: i.quantity,
@@ -131,6 +145,64 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
           </Box>
         </Box>
       </Paper>
+
+      <Accordion sx={{ mb: 3 }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant="h6">Transport Details (Optional)</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 3 }}>
+            <TextField
+              fullWidth
+              label="Transport Company"
+              {...register('transport_company')}
+              error={!!errors.transport_company}
+              helperText={errors.transport_company?.message}
+            />
+            <TextField
+              fullWidth
+              label="Bilty Number"
+              {...register('transport_bilty_number')}
+              error={!!errors.transport_bilty_number}
+              helperText={errors.transport_bilty_number?.message}
+            />
+            <TextField
+              fullWidth
+              label="Destination City"
+              {...register('transport_destination_city')}
+              error={!!errors.transport_destination_city}
+              helperText={errors.transport_destination_city?.message}
+            />
+            <TextField
+              fullWidth
+              label="Transport Charges"
+              type="number"
+              slotProps={{ htmlInput: { step: '0.01' } }}
+              {...register('transport_charges', { valueAsNumber: true })}
+              error={!!errors.transport_charges}
+              helperText={errors.transport_charges?.message}
+            />
+            <FormControl fullWidth error={!!errors.transport_paid_by}>
+              <InputLabel>Paid By</InputLabel>
+              <Select
+                label="Paid By"
+                {...register('transport_paid_by')}
+                defaultValue={initialData?.transport_paid_by || 'Client'}
+              >
+                <MenuItem value="Client">Client</MenuItem>
+                <MenuItem value="Sender">Sender (Business)</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              fullWidth
+              label="Remarks"
+              {...register('transport_remarks')}
+              error={!!errors.transport_remarks}
+              helperText={errors.transport_remarks?.message}
+            />
+          </Box>
+        </AccordionDetails>
+      </Accordion>
 
       <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>Line Items</Typography>

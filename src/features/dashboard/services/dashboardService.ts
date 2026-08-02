@@ -102,5 +102,15 @@ export const dashboardService = {
 
     if (error) throw error;
     return Number(data || 0);
+  },
+
+  getTotalExpense: async (year: number, month: number): Promise<number> => {
+    const { data, error } = await supabase.rpc('get_total_expense', {
+      p_year: year,
+      p_month: month
+    });
+
+    if (error) throw error;
+    return Number(data || 0);
   }
 };

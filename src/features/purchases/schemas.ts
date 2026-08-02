@@ -15,6 +15,12 @@ export const purchaseSchema = z.object({
   tax_rate: z.number().min(0, 'Tax rate cannot be negative'),
   paid_amount: z.number().min(0, 'Paid amount cannot be negative'),
   items: z.array(purchaseItemSchema).min(1, 'At least one item is required'),
+  transport_company: z.string().optional(),
+  transport_bilty_number: z.string().optional(),
+  transport_from_city: z.string().optional(),
+  transport_charges: z.number().min(0, 'Transport charges cannot be negative').optional(),
+  transport_paid_by: z.enum(['Vendor', 'Receiver']).optional(),
+  transport_payment_status: z.enum(['Paid', 'Pending']).optional(),
 });
 
 export type PurchaseItemFormInputs = z.infer<typeof purchaseItemSchema>;

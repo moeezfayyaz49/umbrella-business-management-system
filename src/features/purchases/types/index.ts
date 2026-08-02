@@ -16,6 +16,12 @@ export interface Purchase {
   total_amount: number;
   paid_amount: number;
   remaining_amount: number;
+  transport_company?: string;
+  transport_bilty_number?: string;
+  transport_from_city?: string;
+  transport_charges?: number;
+  transport_paid_by?: 'Vendor' | 'Receiver';
+  transport_payment_status?: 'Paid' | 'Pending';
   items: PurchaseItem[];
   created_at: string;
   updated_at: string;

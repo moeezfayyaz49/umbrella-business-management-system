@@ -17,6 +17,12 @@ export interface Invoice {
   total_amount: number;
   paid_amount: number;
   remaining_amount: number;
+  transport_company?: string;
+  transport_bilty_number?: string;
+  transport_destination_city?: string;
+  transport_charges?: number;
+  transport_paid_by?: 'Client' | 'Sender';
+  transport_remarks?: string;
   items: InvoiceItem[];
   created_at: string;
   updated_at: string;
