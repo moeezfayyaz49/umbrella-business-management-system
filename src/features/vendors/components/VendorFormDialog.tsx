@@ -27,7 +27,7 @@ export const VendorFormDialog = ({ open, onClose, onSubmit, initialData }: Props
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<VendorFormInputs>({
-    resolver: zodResolver(vendorSchema),
+    resolver: zodResolver(vendorSchema)as any,
     defaultValues: {
       name: '',
       phones: [],

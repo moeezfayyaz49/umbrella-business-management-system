@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const clientSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  phones: z.array(z.string()).optional().default([]),
+  phones: z.array(z.string()).default([]),
   address: z.string().optional(),
   opening_balance: z.number(),
   notes: z.string().optional(),

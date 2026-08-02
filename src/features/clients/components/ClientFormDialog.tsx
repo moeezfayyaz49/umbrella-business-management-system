@@ -27,7 +27,7 @@ export const ClientFormDialog = ({ open, onClose, onSubmit, initialData }: Props
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<ClientFormInputs>({
-    resolver: zodResolver(clientSchema),
+    resolver: zodResolver(clientSchema) as any,
     defaultValues: {
       name: '',
       phones: [],
