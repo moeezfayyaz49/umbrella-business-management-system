@@ -149,7 +149,7 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
             />
             <Box sx={{ width: 100, display: 'flex', alignItems: 'center', height: '56px' }}>
               <Typography sx={{ fontWeight: 'bold' }}>
-                ${((watchItems?.[index]?.quantity || 0) * (watchItems?.[index]?.unit_price || 0)).toFixed(2)}
+                {formatCurrency(((watchItems?.[index]?.quantity || 0) * (watchItems?.[index]?.unit_price || 0)), settings?.currency)}
               </Typography>
             </Box>
             <IconButton color="error" onClick={() => remove(index)} sx={{ mt: 1 }} disabled={fields.length === 1}>
