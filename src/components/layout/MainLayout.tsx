@@ -1,4 +1,4 @@
-import { Box, CssBaseline, AppBar, Toolbar, Typography, Drawer, SwipeableDrawer, IconButton, useMediaQuery } from '@mui/material';
+import { Box, CssBaseline, AppBar, Toolbar, Typography, Drawer, SwipeableDrawer, IconButton, useMediaQuery, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@mui/material';
 import { Outlet, useNavigate } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -30,9 +30,20 @@ export const MainLayout = () => {
     setMobileOpen(false);
   };
 
-  const handleLogout = () => {
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+
+  const handleLogoutClick = () => {
+    setLogoutDialogOpen(true);
+  };
+
+  const handleLogoutConfirm = () => {
+    setLogoutDialogOpen(false);
     logout();
     navigate('/login');
+  };
+
+  const handleLogoutCancel = () => {
+    setLogoutDialogOpen(false);
   };
 
   return (
@@ -51,14 +62,14 @@ export const MainLayout = () => {
               <MenuIcon />
             </IconButton>
           )}
-          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, minWidth: 0 }}>
             {settings?.company_logo_url && (
               <Box
                 component="img"
                 src={settings.company_logo_url}
                 alt="Company Logo"
                 sx={{
-                  height: 40,
+                  height: { xs: 32, sm: 40 },
                   width: 'auto',
                   objectFit: 'contain',
                   mr: 2,
@@ -66,16 +77,25 @@ export const MainLayout = () => {
                 }}
               />
             )}
-            <Typography variant="h6" noWrap component="div">
+            <Typography 
+              variant="h6" 
+              noWrap 
+              component="div"
+              sx={{ 
+                fontSize: { xs: '1rem', sm: '1.25rem' },
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
               {settings?.company_name === 'Umbrella Brand' 
                 ? 'Umbrella Brand Management System' 
                 : settings?.company_name || 'Business Management System'}
             </Typography>
           </Box>
-          <IconButton sx={{ ml: 1 }} onClick={toggleTheme} color="inherit">
+          <IconButton sx={{ ml: 1, flexShrink: 0 }} onClick={toggleTheme} color="inherit">
             {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
           </IconButton>
-          <IconButton sx={{ ml: 1 }} onClick={handleLogout} color="inherit">
+          <IconButton sx={{ ml: 1, flexShrink: 0 }} onClick={handleLogoutClick} color="inherit">
             <LogoutIcon />
           </IconButton>
         </Toolbar>
@@ -126,6 +146,28 @@ export const MainLayout = () => {
         <Toolbar />
         <Outlet />
       </Box>
+
+      <Dialog
+        open={logoutDialogOpen}
+        onClose={handleLogoutCancel}
+        aria-labelledby="logout-dialog-title"
+        aria-describedby="logout-dialog-description"
+      >
+        <DialogTitle id="logout-dialog-title">
+          Confirm Logout
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="logout-dialog-description">
+            Are you sure you want to log out?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleLogoutCancel} color="inherit">Cancel</Button>
+          <Button onClick={handleLogoutConfirm} color="error" autoFocus>
+            Logout
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
