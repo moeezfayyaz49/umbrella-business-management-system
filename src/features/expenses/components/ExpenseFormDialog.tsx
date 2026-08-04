@@ -1,14 +1,15 @@
 import { 
   Dialog, DialogTitle, DialogContent, DialogActions, 
-  Button, TextField, Box, FormControl, InputLabel, Select, MenuItem 
+  Button, TextField, Box, FormControl, InputLabel, Select, MenuItem, CircularProgress
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { expenseSchema } from '../schemas';
 import type { ExpenseFormInputs } from '../schemas';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { Expense } from '../types';
 import { useExpenseCategories } from '../hooks/useExpenseCategories';
+import { expenseService } from '../services/expenseService';
 import dayjs from 'dayjs';
 
 interface Props {
@@ -19,7 +20,8 @@ interface Props {
 }
 
 export const ExpenseFormDialog = ({ open, onClose, onSubmit, initialData }: Props) => {
-  const { data: categories, isLoading: isCategoriesLoading } = useExpenseCategories();
+  const { data: categories, isLoading: isCategoriesLoading, refetch } = useExpenseCategories();
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
 
   const {
     register,
@@ -57,10 +59,33 @@ export const ExpenseFormDialog = ({ open, onClose, onSubmit, initialData }: Prop
     }
   }, [initialData, open, reset]);
 
+  const handleFormSubmit = async (data: ExpenseFormInputs) => {
+    if (data.category_id === 'new-other') {
+      try {
+        setIsCreatingCategory(true);
+        const newCat = await expenseService.createCategory({
+          name: 'Other',
+          description: 'Miscellaneous expenses',
+        });
+        await refetch();
+        data.category_id = newCat.id;
+      } catch (error) {
+        console.error('Failed to create Other category', error);
+        // If it fails, we shouldn't proceed with an invalid UUID
+        setIsCreatingCategory(false);
+        return;
+      }
+      setIsCreatingCategory(false);
+    }
+    onSubmit(data);
+  };
+
+  const hasOtherCategory = categories?.some(c => c.name.toLowerCase() === 'other');
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>{initialData ? 'Edit Expense' : 'Record Expense'}</DialogTitle>
-      <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+      <Box component="form" onSubmit={handleSubmit(handleFormSubmit)}>
         <DialogContent dividers>
           <FormControl fullWidth margin="normal" error={!!errors.category_id}>
             <InputLabel>Category</InputLabel>
@@ -68,11 +93,15 @@ export const ExpenseFormDialog = ({ open, onClose, onSubmit, initialData }: Prop
               label="Category"
               {...register('category_id')}
               defaultValue={initialData?.category_id || ''}
+              disabled={isCreatingCategory}
             >
               {isCategoriesLoading && <MenuItem value="">Loading...</MenuItem>}
               {categories?.map(cat => (
                 <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
               ))}
+              {!isCategoriesLoading && !hasOtherCategory && (
+                <MenuItem value="new-other">Other</MenuItem>
+              )}
             </Select>
           </FormControl>
           
@@ -119,9 +148,9 @@ export const ExpenseFormDialog = ({ open, onClose, onSubmit, initialData }: Prop
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose} color="inherit">Cancel</Button>
-          <Button type="submit" variant="contained" disabled={isSubmitting}>
-            {initialData ? 'Save Changes' : 'Record Expense'}
+          <Button onClick={onClose} color="inherit" disabled={isSubmitting || isCreatingCategory}>Cancel</Button>
+          <Button type="submit" variant="contained" disabled={isSubmitting || isCreatingCategory}>
+            {isCreatingCategory ? <CircularProgress size={24} color="inherit" /> : (initialData ? 'Save Changes' : 'Record Expense')}
           </Button>
         </DialogActions>
       </Box>
