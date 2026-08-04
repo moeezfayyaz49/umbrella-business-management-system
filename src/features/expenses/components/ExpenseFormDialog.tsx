@@ -27,6 +27,8 @@ export const ExpenseFormDialog = ({ open, onClose, onSubmit, initialData }: Prop
     register,
     handleSubmit,
     reset,
+    setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<ExpenseFormInputs>({
     resolver: zodResolver(expenseSchema),
@@ -49,15 +51,28 @@ export const ExpenseFormDialog = ({ open, onClose, onSubmit, initialData }: Prop
         description: initialData.description || '',
       });
     } else if (open) {
+      const otherCategory = categories?.find(c => c.name.toLowerCase() === 'other');
       reset({
-        category_id: '',
+        category_id: otherCategory ? otherCategory.id : 'new-other',
         date: dayjs().format('YYYY-MM-DD'),
         amount: 0,
         reference: '',
         description: '',
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, open, reset]);
+
+  useEffect(() => {
+    if (open && !initialData && categories) {
+      const otherCategory = categories.find(c => c.name.toLowerCase() === 'other');
+      const defaultId = otherCategory ? otherCategory.id : 'new-other';
+      const currentVal = getValues('category_id');
+      if (!currentVal || currentVal === 'new-other') {
+        setValue('category_id', defaultId);
+      }
+    }
+  }, [categories, open, initialData, setValue, getValues]);
 
   const handleFormSubmit = async (data: ExpenseFormInputs) => {
     if (data.category_id === 'new-other') {

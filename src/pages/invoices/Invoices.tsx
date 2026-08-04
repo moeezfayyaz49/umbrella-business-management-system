@@ -1,11 +1,13 @@
 import { Box, Typography, Button } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import dayjs, { Dayjs } from 'dayjs';
 import { InvoiceList } from '../../features/invoices/components/InvoiceList';
 import { useInvoices } from '../../features/invoices/hooks/useInvoices';
 import { useDeleteInvoice, useUpdateInvoiceItemCosts } from '../../features/invoices/hooks/useInvoiceMutations';
 import { InvoiceCostDialog, type InvoiceCostFormInputs } from '../../features/invoices/components/InvoiceCostDialog';
-import { useState } from 'react';
 import type { Invoice } from '../../features/invoices/types';
 
 export const Invoices = () => {
@@ -16,6 +18,7 @@ export const Invoices = () => {
 
   const [isCostDialogOpen, setIsCostDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | undefined>();
+  const [filterDate, setFilterDate] = useState<Dayjs | null>(null);
 
   const handleOpenCostDialog = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
@@ -44,17 +47,30 @@ export const Invoices = () => {
     }
   };
 
+  const filteredInvoices = invoices?.filter(invoice => {
+    if (!filterDate) return true;
+    return invoice.date.startsWith(filterDate.format('YYYY-MM-DD'));
+  });
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Sales Invoices</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/invoices/new')}>
-          Create Invoice
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <DatePicker
+            label="Filter by Date"
+            value={filterDate}
+            onChange={(newValue) => setFilterDate(newValue)}
+            slotProps={{ textField: { size: 'small' } }}
+          />
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/invoices/new')}>
+            Create Invoice
+          </Button>
+        </Box>
       </Box>
 
       <InvoiceList
-        invoices={invoices}
+        invoices={filteredInvoices}
         isLoading={isLoading}
         onDelete={handleDelete}
         onManageCost={handleOpenCostDialog}
