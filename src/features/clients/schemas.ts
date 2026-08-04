@@ -4,6 +4,7 @@ export const clientSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   phones: z.array(z.string()).default([]),
   address: z.string().optional(),
+  city: z.string().optional(),
   opening_balance: z.number(),
   notes: z.string().optional(),
 });

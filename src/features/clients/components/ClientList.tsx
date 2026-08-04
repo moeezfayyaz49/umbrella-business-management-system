@@ -29,6 +29,7 @@ export const ClientList = ({ clients, isLoading, onEdit, onDelete }: Props) => {
           <TableRow>
             <TableCell>Name</TableCell>
             <TableCell>Phones</TableCell>
+            <TableCell>City</TableCell>
             <TableCell align="right">Opening Balance</TableCell>
             <TableCell align="center">Actions</TableCell>
           </TableRow>
@@ -36,13 +37,13 @@ export const ClientList = ({ clients, isLoading, onEdit, onDelete }: Props) => {
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
+              <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
                 <CircularProgress />
               </TableCell>
             </TableRow>
           ) : !clients?.length ? (
             <TableRow>
-              <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
+              <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
                 <Typography color="text.secondary">No clients found.</Typography>
               </TableCell>
             </TableRow>
@@ -51,6 +52,7 @@ export const ClientList = ({ clients, isLoading, onEdit, onDelete }: Props) => {
               <TableRow key={client.id} hover>
                 <TableCell>{client.name}</TableCell>
                 <TableCell>{client.phones?.join(', ') || '-'}</TableCell>
+                <TableCell>{client.city || '-'}</TableCell>
                 <TableCell align="right">
                   {formatCurrency(client.opening_balance, settings?.currency)}
                 </TableCell>
