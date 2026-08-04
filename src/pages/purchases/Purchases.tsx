@@ -2,7 +2,7 @@ import { Box, Typography, Button } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import AddIcon from '@mui/icons-material/Add';
 import { useState } from 'react';
-import dayjs, { Dayjs } from 'dayjs';
+import { Dayjs } from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 import { PurchaseList } from '../../features/purchases/components/PurchaseList';
 import { usePurchases } from '../../features/purchases/hooks/usePurchases';

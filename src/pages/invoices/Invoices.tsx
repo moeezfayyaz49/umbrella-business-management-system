@@ -3,7 +3,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import dayjs, { Dayjs } from 'dayjs';
+import { Dayjs } from 'dayjs';
 import { InvoiceList } from '../../features/invoices/components/InvoiceList';
 import { useInvoices } from '../../features/invoices/hooks/useInvoices';
 import { useDeleteInvoice, useUpdateInvoiceItemCosts } from '../../features/invoices/hooks/useInvoiceMutations';
