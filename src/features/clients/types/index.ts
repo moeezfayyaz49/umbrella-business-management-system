@@ -3,6 +3,7 @@ export interface Client {
   name: string;
   phones?: string[];
   address?: string;
+  city?: string;
   opening_balance: number;
   notes?: string;
   created_at: string;

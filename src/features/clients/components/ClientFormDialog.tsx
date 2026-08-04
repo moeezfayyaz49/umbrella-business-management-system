@@ -32,6 +32,7 @@ export const ClientFormDialog = ({ open, onClose, onSubmit, initialData }: Props
       name: '',
       phones: [],
       address: '',
+      city: '',
       opening_balance: 0,
       notes: '',
     },
@@ -43,6 +44,7 @@ export const ClientFormDialog = ({ open, onClose, onSubmit, initialData }: Props
         name: initialData.name,
         phones: initialData.phones || [],
         address: initialData.address || '',
+        city: initialData.city || '',
         opening_balance: initialData.opening_balance,
         notes: initialData.notes || '',
       });
@@ -51,6 +53,7 @@ export const ClientFormDialog = ({ open, onClose, onSubmit, initialData }: Props
         name: '',
         phones: [],
         address: '',
+        city: '',
         opening_balance: 0,
         notes: '',
       });
@@ -111,6 +114,14 @@ export const ClientFormDialog = ({ open, onClose, onSubmit, initialData }: Props
             {...register('address')}
             error={!!errors.address}
             helperText={errors.address?.message}
+          />
+          <TextField
+            fullWidth
+            label="City"
+            margin="normal"
+            {...register('city')}
+            error={!!errors.city}
+            helperText={errors.city?.message}
           />
           <TextField
             fullWidth
