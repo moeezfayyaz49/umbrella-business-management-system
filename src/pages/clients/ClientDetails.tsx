@@ -1,54 +1,55 @@
-import { Box, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ClientLedger } from '../../features/clients/components/ClientLedger';
 import { useClient } from '../../features/clients/hooks/useClient';
-import { useClientLedger } from '../../features/clients/hooks/useClientLedger';
-import { useCreateClientLedgerEntry, useUpdateClientLedgerEntry, useDeleteClientLedgerEntry } from '../../features/clients/hooks/useClientMutations';
-import { LedgerEntryFormDialog, type LedgerEntryFormInputs } from '../../components/forms/LedgerEntryFormDialog';
+import { useClientInvoices } from '../../features/invoices/hooks/useInvoices';
+import { InvoiceList } from '../../features/invoices/components/InvoiceList';
+import { useDeleteInvoice, useUpdateInvoiceItemCosts } from '../../features/invoices/hooks/useInvoiceMutations';
+import { InvoiceCostDialog, type InvoiceCostFormInputs } from '../../features/invoices/components/InvoiceCostDialog';
+import type { Invoice } from '../../features/invoices/types';
 import { useState } from 'react';
-import type { ClientLedgerEntry } from '../../features/clients/types';
 import AddIcon from '@mui/icons-material/Add';
+import { useSettings } from '../../features/settings/hooks/useSettings';
+import { formatCurrency } from '../../utils/currency';
 
 export const ClientDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   const { data: client, isLoading: isClientLoading } = useClient(id || '');
-  const { data: ledgerEntries, isLoading: isLedgerLoading } = useClientLedger(id || '');
+  const { data: invoices, isLoading: isInvoicesLoading } = useClientInvoices(id || '');
+  const { data: settings } = useSettings();
 
-  const createMutation = useCreateClientLedgerEntry(id || '');
-  const updateMutation = useUpdateClientLedgerEntry(id || '');
-  const deleteMutation = useDeleteClientLedgerEntry(id || '');
+  const deleteMutation = useDeleteInvoice();
+  const updateCostMutation = useUpdateInvoiceItemCosts();
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingEntry, setEditingEntry] = useState<ClientLedgerEntry | undefined>();
+  const [isCostDialogOpen, setIsCostDialogOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | undefined>();
 
-  const handleOpenDialog = (entry?: ClientLedgerEntry) => {
-    setEditingEntry(entry);
-    setIsDialogOpen(true);
+  const handleOpenCostDialog = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setIsCostDialogOpen(true);
   };
 
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false);
-    setEditingEntry(undefined);
+  const handleCloseCostDialog = () => {
+    setIsCostDialogOpen(false);
+    setSelectedInvoice(undefined);
   };
 
-  const handleSubmit = (data: LedgerEntryFormInputs) => {
-    if (editingEntry) {
-      updateMutation.mutateAsync({ id: editingEntry.id, data }).then(() => {
-        handleCloseDialog();
-      });
-    } else {
-      createMutation.mutateAsync(data).then(() => {
-        handleCloseDialog();
+  const handleCostSubmit = (data: InvoiceCostFormInputs) => {
+    if (selectedInvoice) {
+      updateCostMutation.mutateAsync({ 
+        invoiceId: selectedInvoice.id, 
+        itemCosts: data.items.map(item => ({ id: item.id, cost: item.cost })) 
+      }).then(() => {
+        handleCloseCostDialog();
       });
     }
   };
 
-  const handleDelete = (entryId: string) => {
-    if (window.confirm('Are you sure you want to delete this transaction?')) {
-      deleteMutation.mutate(entryId);
+  const handleDelete = (invoiceId: string) => {
+    if (window.confirm('Are you sure you want to delete this invoice?')) {
+      deleteMutation.mutate(invoiceId);
     }
   };
 
@@ -58,25 +59,46 @@ export const ClientDetails = () => {
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/clients')}>
           Back to Clients
         </Button>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
-          Add Transaction
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/invoices/new')}>
+          Create Invoice
         </Button>
       </Box>
 
-      <ClientLedger
-        client={client}
-        ledgerEntries={ledgerEntries}
-        isLoading={isClientLoading || isLedgerLoading}
-        onEditTransaction={handleOpenDialog}
-        onDeleteTransaction={handleDelete}
+      {client && (
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h5" gutterBottom>{client.name}</Typography>
+          <Typography variant="body2" color="text.secondary">
+            {client.address}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Phone: {client.phones?.join(', ') || '-'}
+          </Typography>
+          {client.notes && (
+            <Typography variant="body2" color="text.secondary">
+              Notes: {client.notes}
+            </Typography>
+          )}
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="h6" color="primary">
+              Closing Balance: {formatCurrency(client.closing_balance || 0, settings?.currency)}
+            </Typography>
+          </Box>
+        </Box>
+      )}
+
+      <InvoiceList
+        invoices={invoices}
+        isLoading={isClientLoading || isInvoicesLoading}
+        onDelete={handleDelete}
+        onManageCost={handleOpenCostDialog}
       />
 
-      <LedgerEntryFormDialog
-        open={isDialogOpen}
-        onClose={handleCloseDialog}
-        onSubmit={handleSubmit}
-        initialData={editingEntry}
-        isSubmitting={createMutation.isPending || updateMutation.isPending}
+      <InvoiceCostDialog
+        open={isCostDialogOpen}
+        onClose={handleCloseCostDialog}
+        onSubmit={handleCostSubmit}
+        invoice={selectedInvoice}
+        isSubmitting={updateCostMutation.isPending}
       />
     </Box>
   );

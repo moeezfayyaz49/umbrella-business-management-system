@@ -6,7 +6,7 @@ export const clientService = {
   getClients: async (searchQuery?: string): Promise<Client[]> => {
     let query = supabase
       .from('clients')
-      .select('*')
+      .select('*, client_ledger_entries(debit, credit)')
       .order('created_at', { ascending: false });
 
     if (searchQuery) {
@@ -16,18 +16,42 @@ export const clientService = {
     const { data, error } = await query;
 
     if (error) throw error;
-    return data as Client[];
+    
+    return (data as any[]).map(client => {
+      const ledgerEntries = client.client_ledger_entries || [];
+      const totalDebit = ledgerEntries.reduce((sum: number, entry: any) => sum + (Number(entry.debit) || 0), 0);
+      const totalCredit = ledgerEntries.reduce((sum: number, entry: any) => sum + (Number(entry.credit) || 0), 0);
+      const closing_balance = Number(client.opening_balance || 0) + totalDebit - totalCredit;
+      
+      const { client_ledger_entries, ...rest } = client;
+      
+      return {
+        ...rest,
+        closing_balance
+      } as Client;
+    });
   },
 
   getClient: async (id: string): Promise<Client> => {
     const { data, error } = await supabase
       .from('clients')
-      .select('*')
+      .select('*, client_ledger_entries(debit, credit)')
       .eq('id', id)
       .single();
 
     if (error) throw error;
-    return data as Client;
+
+    const ledgerEntries = data.client_ledger_entries || [];
+    const totalDebit = ledgerEntries.reduce((sum: number, entry: any) => sum + (Number(entry.debit) || 0), 0);
+    const totalCredit = ledgerEntries.reduce((sum: number, entry: any) => sum + (Number(entry.credit) || 0), 0);
+    const closing_balance = Number(data.opening_balance || 0) + totalDebit - totalCredit;
+
+    const { client_ledger_entries, ...rest } = data;
+
+    return {
+      ...rest,
+      closing_balance
+    } as Client;
   },
 
   createClient: async (clientData: ClientFormInputs): Promise<Client> => {

@@ -24,6 +24,7 @@ export interface Invoice {
   transport_paid_by?: 'Client' | 'Sender';
   transport_remarks?: string;
   items: InvoiceItem[];
+  clients?: { name: string; city: string };
   created_at: string;
   updated_at: string;
 }

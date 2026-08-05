@@ -31,19 +31,20 @@ export const ClientList = ({ clients, isLoading, onEdit, onDelete }: Props) => {
             <TableCell>Phones</TableCell>
             <TableCell>City</TableCell>
             <TableCell align="right">Opening Balance</TableCell>
+            <TableCell align="right">Closing Balance</TableCell>
             <TableCell align="center">Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+              <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
                 <CircularProgress />
               </TableCell>
             </TableRow>
           ) : !clients?.length ? (
             <TableRow>
-              <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+              <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
                 <Typography color="text.secondary">No clients found.</Typography>
               </TableCell>
             </TableRow>
@@ -55,6 +56,9 @@ export const ClientList = ({ clients, isLoading, onEdit, onDelete }: Props) => {
                 <TableCell>{client.city || '-'}</TableCell>
                 <TableCell align="right">
                   {formatCurrency(client.opening_balance, settings?.currency)}
+                </TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                  {formatCurrency(client.closing_balance || 0, settings?.currency)}
                 </TableCell>
                 <TableCell align="center">
                   <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
