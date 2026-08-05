@@ -7,3 +7,11 @@ export const useInvoices = () => {
     queryFn: invoiceService.getInvoices,
   });
 };
+
+export const useClientInvoices = (clientId: string) => {
+  return useQuery({
+    queryKey: ['invoices', 'client', clientId],
+    queryFn: () => invoiceService.getInvoicesByClient(clientId),
+    enabled: !!clientId,
+  });
+};

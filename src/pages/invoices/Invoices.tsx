@@ -1,4 +1,4 @@
-import { Box, Typography, Button } from '@mui/material';
+import { Box, Typography, Button, TextField } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router-dom';
@@ -19,6 +19,7 @@ export const Invoices = () => {
   const [isCostDialogOpen, setIsCostDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | undefined>();
   const [filterDate, setFilterDate] = useState<Dayjs | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleOpenCostDialog = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
@@ -48,8 +49,20 @@ export const Invoices = () => {
   };
 
   const filteredInvoices = invoices?.filter(invoice => {
-    if (!filterDate) return true;
-    return invoice.date.startsWith(filterDate.format('YYYY-MM-DD'));
+    let matchesDate = true;
+    if (filterDate) {
+      matchesDate = invoice.date.startsWith(filterDate.format('YYYY-MM-DD'));
+    }
+
+    let matchesSearch = true;
+    if (searchQuery) {
+      const searchLower = searchQuery.toLowerCase();
+      const clientName = invoice.clients?.name?.toLowerCase() || '';
+      const clientCity = invoice.clients?.city?.toLowerCase() || '';
+      matchesSearch = clientName.includes(searchLower) || clientCity.includes(searchLower);
+    }
+
+    return matchesDate && matchesSearch;
   });
 
   return (
@@ -57,6 +70,12 @@ export const Invoices = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Sales Invoices</Typography>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <TextField
+            label="Search Client or City"
+            size="small"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
           <DatePicker
             label="Filter by Date"
             value={filterDate}

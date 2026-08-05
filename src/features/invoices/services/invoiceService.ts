@@ -16,7 +16,18 @@ export const invoiceService = {
   getInvoices: async (): Promise<Invoice[]> => {
     const { data, error } = await supabase
       .from('invoices')
-      .select('*, items:invoice_items(*)')
+      .select('*, items:invoice_items(*), clients(name, city)')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data as Invoice[];
+  },
+
+  getInvoicesByClient: async (clientId: string): Promise<Invoice[]> => {
+    const { data, error } = await supabase
+      .from('invoices')
+      .select('*, items:invoice_items(*), clients(name, city)')
+      .eq('client_id', clientId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -26,7 +37,7 @@ export const invoiceService = {
   getInvoice: async (id: string): Promise<Invoice> => {
     const { data, error } = await supabase
       .from('invoices')
-      .select('*, items:invoice_items(*)')
+      .select('*, items:invoice_items(*), clients(name, city)')
       .eq('id', id)
       .single();
 
@@ -55,11 +66,13 @@ export const invoiceService = {
     // 2. Insert items
     if (items && items.length > 0) {
       const itemsToInsert = items.map(item => ({
+        ...(item.id ? { id: item.id } : {}),
         invoice_id: newInvoice.id,
         description: item.description,
         quantity: item.quantity,
         unit_price: item.unit_price,
-        total: item.quantity * item.unit_price
+        total: item.quantity * item.unit_price,
+        ...(item.cost !== undefined ? { cost: item.cost } : {})
       }));
 
       const { error: itemsError } = await supabase
@@ -100,11 +113,13 @@ export const invoiceService = {
     // 3. Insert new items
     if (items && items.length > 0) {
       const itemsToInsert = items.map(item => ({
+        ...(item.id ? { id: item.id } : {}),
         invoice_id: id,
         description: item.description,
         quantity: item.quantity,
         unit_price: item.unit_price,
-        total: item.quantity * item.unit_price
+        total: item.quantity * item.unit_price,
+        ...(item.cost !== undefined ? { cost: item.cost } : {})
       }));
 
       const { error: itemsError } = await supabase

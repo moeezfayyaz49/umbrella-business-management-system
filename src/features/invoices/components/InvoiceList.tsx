@@ -35,28 +35,33 @@ export const InvoiceList = ({ invoices, isLoading, onDelete, onManageCost }: Pro
             <TableCell align="right">Total</TableCell>
             <TableCell align="right">Cost</TableCell>
             <TableCell align="right">Profit</TableCell>
-            <TableCell align="right">Paid</TableCell>
-            <TableCell align="right">Remaining</TableCell>
             <TableCell align="center">Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={8} align="center" sx={{ py: 3 }}>
+              <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
                 <CircularProgress />
               </TableCell>
             </TableRow>
           ) : !invoices?.length ? (
             <TableRow>
-              <TableCell colSpan={8} align="center" sx={{ py: 3 }}>
+              <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
                 <Typography color="text.secondary">No invoices found.</Typography>
               </TableCell>
             </TableRow>
           ) : (
             invoices.map((invoice) => (
               <TableRow key={invoice.id} hover>
-                <TableCell>{invoice.invoice_number}</TableCell>
+                <TableCell>
+                  <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                    #{invoice.invoice_number}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {invoice.clients?.name || 'Unknown Client'}
+                  </Typography>
+                </TableCell>
                 <TableCell>{dayjs(invoice.date).format('MMM D, YYYY')}</TableCell>
                 <TableCell align="right">
                   {formatCurrency(invoice.total_amount, settings?.currency)}
@@ -77,12 +82,6 @@ export const InvoiceList = ({ invoices, isLoading, onDelete, onManageCost }: Pro
                     const profit = totalCost > 0 ? invoice.total_amount - totalCost : 0;
                     return formatCurrency(profit, settings?.currency);
                   })()}
-                </TableCell>
-                <TableCell align="right">
-                  {formatCurrency(invoice.paid_amount, settings?.currency)}
-                </TableCell>
-                <TableCell align="right">
-                  {formatCurrency(invoice.remaining_amount, settings?.currency)}
                 </TableCell>
                 <TableCell align="center">
                   <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
