@@ -10,7 +10,7 @@ export const PurchaseView = ({ purchase }: { purchase: Purchase }) => {
   const { data: vendor } = useVendor(purchase.vendor_id);
 
   return (
-    <Paper elevation={0} sx={{ p: 4, border: '1px solid', borderColor: 'divider', minHeight: '800px', backgroundColor: '#fff', color: '#000' }}>
+    <Paper elevation={0} sx={{ p: 4, border: '1px solid', borderColor: 'divider', minHeight: '800px' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
         <Box>
           <Typography variant="h4" sx={{ fontWeight: 'bold' }}>PURCHASE ORDER</Typography>

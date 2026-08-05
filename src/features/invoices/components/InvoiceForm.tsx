@@ -1,12 +1,12 @@
 import {
   Box, Button, TextField, Typography, Paper,
   IconButton, Divider, Select, MenuItem, FormControl, InputLabel,
-  Accordion, AccordionSummary, AccordionDetails
+  Accordion, AccordionSummary, AccordionDetails, Autocomplete
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { invoiceSchema } from '../schemas';
 import type { InvoiceFormInputs } from '../schemas';
@@ -118,19 +118,27 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
             />
           </Box>
           <Box>
-            <FormControl fullWidth error={!!errors.client_id}>
-              <InputLabel>Client</InputLabel>
-              <Select
-                label="Client"
-                {...register('client_id')}
-                defaultValue={initialData?.client_id || ''}
-              >
-                {isClientsLoading && <MenuItem value="">Loading...</MenuItem>}
-                {clients?.map(client => (
-                  <MenuItem key={client.id} value={client.id}>{client.name}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <Controller
+              name="client_id"
+              control={control}
+              render={({ field }) => (
+                <Autocomplete
+                  options={clients || []}
+                  getOptionLabel={(option) => `${option.name}${option.city ? ` - ${option.city}` : ''}`}
+                  isOptionEqualToValue={(option, value) => option.id === value?.id}
+                  onChange={(_, data) => field.onChange(data?.id || '')}
+                  value={clients?.find(c => c.id === field.value) || null}
+                  renderInput={(params) => (
+                    <TextField 
+                      {...params} 
+                      label="Client (Search by Name/City)" 
+                      error={!!errors.client_id}
+                      helperText={errors.client_id?.message}
+                    />
+                  )}
+                />
+              )}
+            />
           </Box>
           <Box>
             <TextField
