@@ -61,11 +61,22 @@ export const InvoiceList = ({ invoices, isLoading, onDelete, onManageCost }: Pro
                 <TableCell align="right">
                   {formatCurrency(invoice.total_amount, settings?.currency)}
                 </TableCell>
-                <TableCell align="right">
-                  {formatCurrency((invoice.items || []).reduce((sum, item) => sum + ((item.cost || 0) * item.quantity), 0), settings?.currency)}
+                <TableCell align="right" sx={{ color: 'error.main' }}>
+                  {(() => {
+                    const totalCost = (invoice.items || []).reduce((sum, item) => sum + ((item.cost || 0) * item.quantity), 0);
+                    return formatCurrency(totalCost, settings?.currency);
+                  })()}
                 </TableCell>
-                <TableCell align="right" sx={{ fontWeight: 'bold', color: (invoice.total_amount - (invoice.items || []).reduce((sum, item) => sum + ((item.cost || 0) * item.quantity), 0)) > 0 ? 'success.main' : 'text.primary' }}>
-                  {formatCurrency(invoice.total_amount - (invoice.items || []).reduce((sum, item) => sum + ((item.cost || 0) * item.quantity), 0), settings?.currency)}
+                <TableCell align="right" sx={{ fontWeight: 'bold', color: (() => {
+                    const totalCost = (invoice.items || []).reduce((sum, item) => sum + ((item.cost || 0) * item.quantity), 0);
+                    const profit = totalCost > 0 ? invoice.total_amount - totalCost : 0;
+                    return profit > 0 ? 'success.main' : 'error.main';
+                  })() }}>
+                  {(() => {
+                    const totalCost = (invoice.items || []).reduce((sum, item) => sum + ((item.cost || 0) * item.quantity), 0);
+                    const profit = totalCost > 0 ? invoice.total_amount - totalCost : 0;
+                    return formatCurrency(profit, settings?.currency);
+                  })()}
                 </TableCell>
                 <TableCell align="right">
                   {formatCurrency(invoice.paid_amount, settings?.currency)}

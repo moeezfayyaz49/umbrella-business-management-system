@@ -15,7 +15,7 @@ export const InvoiceView = () => {
   if (isLoading || !invoice) return null;
 
   return (
-    <Paper elevation={3} sx={{ p: 4, mb: 4, minHeight: '800px', backgroundColor: '#fff', color: '#000' }} className="print-area">
+    <Paper elevation={3} sx={{ p: 4, mb: 4, minHeight: '800px' }} className="print-area">
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
         <Box>
           {settings?.company_logo_url && (
