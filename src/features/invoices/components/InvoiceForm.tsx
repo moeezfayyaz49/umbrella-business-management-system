@@ -24,7 +24,7 @@ interface Props {
 }
 
 export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
-  const { data: clients, isLoading: isClientsLoading } = useClients();
+  const { data: clients } = useClients();
   const { data: settings } = useSettings();
 
   const {
