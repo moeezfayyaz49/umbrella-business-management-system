@@ -4,6 +4,10 @@ export interface PurchaseItem {
   quantity: number;
   unit_price: number;
   total: number;
+  unit?: string;
+  weight?: number;
+  weight_unit?: string;
+  color?: string;
 }
 
 export interface Purchase {

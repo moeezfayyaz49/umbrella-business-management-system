@@ -52,7 +52,7 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
       transport_charges: 0,
       transport_paid_by: 'Client',
       transport_remarks: '',
-      items: [{ description: '', quantity: 1, unit_price: 0 }],
+      items: [{ description: '', quantity: 1, unit_price: 0, unit: 'Piece' }],
     },
   });
 
@@ -218,42 +218,86 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
         <Typography variant="h6" gutterBottom>Line Items</Typography>
         
         {fields.map((field, index) => (
-          <Box key={field.id} sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', mb: 2 }}>
-            <TextField
-              sx={{ flexGrow: 1 }}
-              label="Description"
-              {...register(`items.${index}.description`)}
-              error={!!errors.items?.[index]?.description}
-              helperText={errors.items?.[index]?.description?.message}
-            />
-            <TextField
-              sx={{ width: 100 }}
-              label="Qty"
-              type="number"
-              slotProps={{ htmlInput: { step: 'any' } }}
-              {...register(`items.${index}.quantity`, { valueAsNumber: true })}
-              error={!!errors.items?.[index]?.quantity}
-            />
-            <TextField
-              sx={{ width: 150 }}
-              label="Unit Price"
-              type="number"
-              slotProps={{ htmlInput: { step: '0.01' } }}
-              {...register(`items.${index}.unit_price`, { valueAsNumber: true })}
-              error={!!errors.items?.[index]?.unit_price}
-            />
-            <Box sx={{ minWidth: 100, textAlign: 'right', display: 'flex', alignItems: 'center', height: '56px' }}>
-              <Typography variant="subtitle1">
-                {formatCurrency((watchItems?.[index]?.quantity || 0) * (watchItems?.[index]?.unit_price || 0), settings?.currency)}
-              </Typography>
+          <Box key={field.id} sx={{ mb: 4, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', mb: 2, flexWrap: 'wrap' }}>
+              <TextField
+                sx={{ flexGrow: 1, minWidth: 200 }}
+                label="Description"
+                {...register(`items.${index}.description`)}
+                error={!!errors.items?.[index]?.description}
+                helperText={errors.items?.[index]?.description?.message}
+              />
+              <FormControl sx={{ width: 120 }}>
+                <InputLabel>Unit</InputLabel>
+                <Select
+                  label="Unit"
+                  {...register(`items.${index}.unit`)}
+                  defaultValue={initialData?.items[index]?.unit || 'Piece'}
+                >
+                  {['Piece', 'Box', 'Kg', 'Liter', 'Meter', 'Dozen', 'Pack', 'Roll', 'Bundle'].map(u => (
+                    <MenuItem key={u} value={u}>{u}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField
+                sx={{ width: 100 }}
+                label="Qty"
+                type="number"
+                slotProps={{ htmlInput: { step: 'any' } }}
+                {...register(`items.${index}.quantity`, { valueAsNumber: true })}
+                error={!!errors.items?.[index]?.quantity}
+              />
+              <TextField
+                sx={{ width: 150 }}
+                label="Unit Price"
+                type="number"
+                slotProps={{ htmlInput: { step: '0.01' } }}
+                {...register(`items.${index}.unit_price`, { valueAsNumber: true })}
+                error={!!errors.items?.[index]?.unit_price}
+              />
+              <Box sx={{ minWidth: 100, textAlign: 'right', display: 'flex', alignItems: 'center', height: '56px' }}>
+                <Typography variant="subtitle1">
+                  {formatCurrency((watchItems?.[index]?.quantity || 0) * (watchItems?.[index]?.unit_price || 0), settings?.currency)}
+                </Typography>
+              </Box>
+              <IconButton color="error" onClick={() => remove(index)} sx={{ mt: 1 }} disabled={fields.length === 1}>
+                <DeleteIcon />
+              </IconButton>
             </Box>
-            <IconButton color="error" onClick={() => remove(index)} sx={{ mt: 1 }} disabled={fields.length === 1}>
-              <DeleteIcon />
-            </IconButton>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+              <TextField
+                sx={{ width: 150 }}
+                label="Weight (Optional)"
+                type="number"
+                slotProps={{ htmlInput: { step: 'any' } }}
+                {...register(`items.${index}.weight`, { setValueAs: v => v === '' ? undefined : Number(v) })}
+                error={!!errors.items?.[index]?.weight}
+              />
+              <FormControl sx={{ width: 150 }}>
+                <InputLabel>Weight Unit</InputLabel>
+                <Select
+                  label="Weight Unit"
+                  {...register(`items.${index}.weight_unit`)}
+                  defaultValue={initialData?.items[index]?.weight_unit || ''}
+                >
+                  <MenuItem value=""><em>None</em></MenuItem>
+                  {['g', 'kg', 'mg', 'lb', 'oz', 'ton'].map(u => (
+                    <MenuItem key={u} value={u}>{u}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField
+                sx={{ width: 200 }}
+                label="Color (Optional)"
+                {...register(`items.${index}.color`)}
+                error={!!errors.items?.[index]?.color}
+                helperText={errors.items?.[index]?.color?.message}
+              />
+            </Box>
           </Box>
         ))}
         
-        <Button startIcon={<AddIcon />} onClick={() => append({ description: '', quantity: 1, unit_price: 0 })}>
+        <Button startIcon={<AddIcon />} onClick={() => append({ description: '', quantity: 1, unit_price: 0, unit: 'Piece' })}>
           Add Item
         </Button>
 

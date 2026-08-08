@@ -72,6 +72,10 @@ export const invoiceService = {
         quantity: item.quantity,
         unit_price: item.unit_price,
         total: item.quantity * item.unit_price,
+        unit: item.unit || 'Piece',
+        weight: item.weight || null,
+        weight_unit: item.weight_unit || null,
+        color: item.color || null,
         ...(item.cost !== undefined ? { cost: item.cost } : {})
       }));
 
@@ -119,6 +123,10 @@ export const invoiceService = {
         quantity: item.quantity,
         unit_price: item.unit_price,
         total: item.quantity * item.unit_price,
+        unit: item.unit || 'Piece',
+        weight: item.weight || null,
+        weight_unit: item.weight_unit || null,
+        color: item.color || null,
         ...(item.cost !== undefined ? { cost: item.cost } : {})
       }));
 

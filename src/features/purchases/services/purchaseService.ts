@@ -58,7 +58,11 @@ export const purchaseService = {
         description: item.description,
         quantity: item.quantity,
         unit_price: item.unit_price,
-        total: item.quantity * item.unit_price
+        total: item.quantity * item.unit_price,
+        unit: item.unit || 'Piece',
+        weight: item.weight || null,
+        weight_unit: item.weight_unit || null,
+        color: item.color || null
       }));
 
       const { error: itemsError } = await supabase
@@ -103,7 +107,11 @@ export const purchaseService = {
         description: item.description,
         quantity: item.quantity,
         unit_price: item.unit_price,
-        total: item.quantity * item.unit_price
+        total: item.quantity * item.unit_price,
+        unit: item.unit || 'Piece',
+        weight: item.weight || null,
+        weight_unit: item.weight_unit || null,
+        color: item.color || null
       }));
 
       const { error: itemsError } = await supabase

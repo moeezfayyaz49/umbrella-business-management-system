@@ -41,6 +41,11 @@ export const ClientLedger = ({ client, ledgerEntries, isLoading, onEditTransacti
               Notes: {client.notes}
             </Typography>
           )}
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="h6" color="primary">
+              Closing Balance: {formatCurrency(client?.closing_balance || 0, settings?.currency)}
+            </Typography>
+          </Box>
         </Box>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button variant="outlined" startIcon={<PrintIcon />} onClick={() => window.print()}>
