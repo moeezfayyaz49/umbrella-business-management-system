@@ -5,6 +5,10 @@ export interface InvoiceItem {
   unit_price: number;
   total: number;
   cost?: number;
+  unit?: string;
+  weight?: number;
+  weight_unit?: string;
+  color?: string;
 }
 
 export interface Invoice {

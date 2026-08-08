@@ -6,6 +6,10 @@ export const invoiceItemSchema = z.object({
   quantity: z.number().min(1, 'Quantity must be at least 1'),
   unit_price: z.number().min(0, 'Unit price cannot be negative'),
   cost: z.number().optional(),
+  unit: z.string().default('Piece'),
+  weight: z.number().optional().or(z.literal('')),
+  weight_unit: z.string().optional().or(z.literal('')),
+  color: z.string().optional(),
 });
 
 export const invoiceSchema = z.object({
