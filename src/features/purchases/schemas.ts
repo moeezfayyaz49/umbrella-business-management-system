@@ -5,7 +5,7 @@ export const purchaseItemSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   quantity: z.number().min(1, 'Quantity must be at least 1'),
   unit_price: z.number().min(0, 'Unit price cannot be negative'),
-  unit: z.string().default('Piece'),
+  unit: z.string(),
   weight: z.number().optional().or(z.literal('')),
   weight_unit: z.string().optional().or(z.literal('')),
   color: z.string().optional(),
