@@ -53,7 +53,7 @@ export const PurchaseView = ({ purchase }: { purchase: Purchase }) => {
                 <TableCell>
                   {item.description}
                   {(item.color || item.weight) && (
-                    <Typography variant="caption" display="block" color="text.secondary">
+                    <Typography variant="caption" sx={{ display: 'block' }} color="text.secondary">
                       {[
                         item.color,
                         item.weight ? `${item.weight} ${item.weight_unit || ''}`.trim() : null
