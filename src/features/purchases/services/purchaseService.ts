@@ -103,6 +103,7 @@ export const purchaseService = {
     // 3. Insert new items
     if (items && items.length > 0) {
       const itemsToInsert = items.map(item => ({
+        ...(item.id ? { id: item.id } : {}),
         purchase_id: id,
         description: item.description,
         quantity: item.quantity,

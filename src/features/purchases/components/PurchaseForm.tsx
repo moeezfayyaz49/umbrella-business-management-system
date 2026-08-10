@@ -78,9 +78,14 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
         transport_paid_by: initialData.transport_paid_by || 'Vendor',
         transport_payment_status: initialData.transport_payment_status || 'Pending',
         items: initialData.items.map(i => ({
+          id: i.id,
           description: i.description,
           quantity: i.quantity,
           unit_price: i.unit_price,
+          unit: i.unit || 'Piece',
+          weight: i.weight ?? undefined,
+          weight_unit: i.weight_unit ?? '',
+          color: i.color ?? '',
         })),
       });
     }

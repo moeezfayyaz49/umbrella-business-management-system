@@ -96,6 +96,10 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
           quantity: i.quantity,
           unit_price: i.unit_price,
           cost: i.cost,
+          unit: i.unit || 'Piece',
+          weight: i.weight ?? undefined,
+          weight_unit: i.weight_unit ?? '',
+          color: i.color ?? '',
         })),
       });
     }
