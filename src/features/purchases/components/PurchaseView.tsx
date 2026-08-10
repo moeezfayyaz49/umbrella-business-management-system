@@ -50,8 +50,18 @@ export const PurchaseView = ({ purchase }: { purchase: Purchase }) => {
           <TableBody>
             {purchase.items.map((item) => (
               <TableRow key={item.id}>
-                <TableCell>{item.description}</TableCell>
-                <TableCell align="right">{item.quantity}</TableCell>
+                <TableCell>
+                  {item.description}
+                  {(item.color || item.weight) && (
+                    <Typography variant="caption" display="block" color="text.secondary">
+                      {[
+                        item.color,
+                        item.weight ? `${item.weight} ${item.weight_unit || ''}`.trim() : null
+                      ].filter(Boolean).join(' - ')}
+                    </Typography>
+                  )}
+                </TableCell>
+                <TableCell align="right">{item.quantity} {item.unit}</TableCell>
                 <TableCell align="right">{formatCurrency(item.unit_price, settings?.currency)}</TableCell>
                 <TableCell align="right">{formatCurrency(item.total, settings?.currency)}</TableCell>
               </TableRow>
