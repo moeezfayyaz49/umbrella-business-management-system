@@ -1,6 +1,7 @@
-import { Box, Typography, Button } from '@mui/material';
+import { Box, Typography, Button, TextField, InputAdornment } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import AddIcon from '@mui/icons-material/Add';
+import SearchIcon from '@mui/icons-material/Search';
 import { useState } from 'react';
 import { Dayjs } from 'dayjs';
 import { ExpenseList } from '../../features/expenses/components/ExpenseList';
@@ -19,6 +20,7 @@ export const Expenses = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | undefined>();
   const [filterDate, setFilterDate] = useState<Dayjs | null>(null);
+  const [searchDescription, setSearchDescription] = useState('');
 
   const handleOpenDialog = (expense?: Expense) => {
     setEditingExpense(expense);
@@ -49,15 +51,39 @@ export const Expenses = () => {
   };
 
   const filteredExpenses = expenses?.filter(expense => {
-    if (!filterDate) return true;
-    return expense.date.startsWith(filterDate.format('YYYY-MM-DD'));
+    if (filterDate && !expense.date.startsWith(filterDate.format('YYYY-MM-DD'))) {
+      return false;
+    }
+    if (searchDescription.trim()) {
+      const desc = expense.description?.toLowerCase() || '';
+      const query = searchDescription.toLowerCase().trim();
+      if (!desc.includes(query)) {
+        return false;
+      }
+    }
+    return true;
   });
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
         <Typography variant="h4">Expenses</Typography>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <TextField
+            size="small"
+            placeholder="Search by description..."
+            value={searchDescription}
+            onChange={(e) => setSearchDescription(e.target.value)}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
           <DatePicker
             label="Filter by Date"
             value={filterDate}

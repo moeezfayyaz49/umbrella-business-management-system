@@ -4,6 +4,7 @@ export interface Vendor {
   phones?: string[];
   address?: string;
   opening_balance: number;
+  closing_balance?: number;
   notes?: string;
   created_at: string;
   updated_at: string;

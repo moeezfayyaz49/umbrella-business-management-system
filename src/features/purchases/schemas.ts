@@ -18,6 +18,7 @@ export const purchaseSchema = z.object({
   discount: z.number().min(0, 'Discount cannot be negative'),
   tax_rate: z.number().min(0, 'Tax rate cannot be negative'),
   paid_amount: z.number().min(0, 'Paid amount cannot be negative'),
+  paid_description: z.string().optional(),
   items: z.array(purchaseItemSchema).min(1, 'At least one item is required'),
   transport_company: z.string().optional(),
   transport_bilty_number: z.string().optional(),

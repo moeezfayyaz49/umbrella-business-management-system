@@ -125,6 +125,14 @@ export const PurchaseView = ({ purchase }: { purchase: Purchase }) => {
             <Typography>Paid</Typography>
             <Typography>{formatCurrency(purchase.paid_amount, settings?.currency)}</Typography>
           </Box>
+          {purchase.paid_description && (
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="body2" color="text.secondary">Paid Notes</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', maxWidth: 180, textAlign: 'right' }}>
+                {purchase.paid_description}
+              </Typography>
+            </Box>
+          )}
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             <Typography sx={{ fontWeight: 'bold' }}>Balance Due</Typography>
             <Typography sx={{ fontWeight: 'bold' }}>{formatCurrency(purchase.remaining_amount, settings?.currency)}</Typography>

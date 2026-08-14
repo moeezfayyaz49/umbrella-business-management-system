@@ -9,6 +9,7 @@ import type { ExpenseFormInputs } from '../schemas';
 import { useEffect, useState } from 'react';
 import type { Expense } from '../types';
 import { useExpenseCategories } from '../hooks/useExpenseCategories';
+import { useVendors } from '../../vendors/hooks/useVendors';
 import { expenseService } from '../services/expenseService';
 import dayjs from 'dayjs';
 
@@ -21,6 +22,7 @@ interface Props {
 
 export const ExpenseFormDialog = ({ open, onClose, onSubmit, initialData }: Props) => {
   const { data: categories, isLoading: isCategoriesLoading, refetch } = useExpenseCategories();
+  const { data: vendors, isLoading: isVendorsLoading } = useVendors();
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
 
   const {
@@ -29,6 +31,7 @@ export const ExpenseFormDialog = ({ open, onClose, onSubmit, initialData }: Prop
     reset,
     setValue,
     getValues,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<ExpenseFormInputs>({
     resolver: zodResolver(expenseSchema),
@@ -38,8 +41,15 @@ export const ExpenseFormDialog = ({ open, onClose, onSubmit, initialData }: Prop
       amount: 0,
       reference: '',
       description: '',
+      vendor_id: '',
+      debit: 0,
+      credit: 0,
     },
   });
+
+  const selectedCategoryId = watch('category_id');
+  const selectedCategory = categories?.find(c => c.id === selectedCategoryId);
+  const isVendorCategory = Boolean(selectedCategory?.name?.toLowerCase().includes('vendor'));
 
   useEffect(() => {
     if (initialData && open) {
@@ -49,6 +59,9 @@ export const ExpenseFormDialog = ({ open, onClose, onSubmit, initialData }: Prop
         amount: initialData.amount,
         reference: initialData.reference || '',
         description: initialData.description || '',
+        vendor_id: initialData.vendor?.id || initialData.vendor_id || '',
+        debit: initialData.amount || 0,
+        credit: 0,
       });
     } else if (open) {
       const otherCategory = categories?.find(c => c.name.toLowerCase() === 'other');
@@ -58,6 +71,9 @@ export const ExpenseFormDialog = ({ open, onClose, onSubmit, initialData }: Prop
         amount: 0,
         reference: '',
         description: '',
+        vendor_id: '',
+        debit: 0,
+        credit: 0,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -86,12 +102,18 @@ export const ExpenseFormDialog = ({ open, onClose, onSubmit, initialData }: Prop
         data.category_id = newCat.id;
       } catch (error) {
         console.error('Failed to create Other category', error);
-        // If it fails, we shouldn't proceed with an invalid UUID
         setIsCreatingCategory(false);
         return;
       }
       setIsCreatingCategory(false);
     }
+
+    if (isVendorCategory) {
+      const debitVal = Number(data.debit || 0);
+      const creditVal = Number(data.credit || 0);
+      data.amount = debitVal > 0 ? debitVal : (creditVal > 0 ? creditVal : data.amount);
+    }
+
     onSubmit(data);
   };
 
@@ -130,17 +152,72 @@ export const ExpenseFormDialog = ({ open, onClose, onSubmit, initialData }: Prop
             error={!!errors.date}
             helperText={errors.date?.message}
           />
-          
-          <TextField
-            fullWidth
-            label="Amount"
-            margin="normal"
-            type="number"
-            slotProps={{ htmlInput: { step: '0.01' } }}
-            {...register('amount', { valueAsNumber: true })}
-            error={!!errors.amount}
-            helperText={errors.amount?.message}
-          />
+
+          {isVendorCategory && (
+            <>
+              <FormControl fullWidth margin="normal" error={!!errors.vendor_id}>
+                <InputLabel>Vendor</InputLabel>
+                <Select
+                  label="Vendor"
+                  {...register('vendor_id')}
+                  defaultValue={initialData?.vendor?.id || ''}
+                  disabled={isSubmitting || isCreatingCategory}
+                >
+                  {isVendorsLoading && <MenuItem value="">Loading vendors...</MenuItem>}
+                  {vendors?.map(v => (
+                    <MenuItem key={v.id} value={v.id}>{v.name}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <TextField
+                fullWidth
+                label="Debit (Payment to Vendor)"
+                margin="normal"
+                type="number"
+                slotProps={{ htmlInput: { step: '0.01', min: '0' } }}
+                {...register('debit', {
+                  valueAsNumber: true,
+                  onChange: (e) => {
+                    const val = parseFloat(e.target.value) || 0;
+                    if (val > 0) setValue('amount', val);
+                  }
+                })}
+                error={!!errors.debit}
+                helperText={errors.debit?.message || 'Payment amount made to vendor'}
+              />
+
+              <TextField
+                fullWidth
+                label="Credit (Vendor Bill / Charge)"
+                margin="normal"
+                type="number"
+                slotProps={{ htmlInput: { step: '0.01', min: '0' } }}
+                {...register('credit', {
+                  valueAsNumber: true,
+                  onChange: (e) => {
+                    const val = parseFloat(e.target.value) || 0;
+                    if (val > 0) setValue('amount', val);
+                  }
+                })}
+                error={!!errors.credit}
+                helperText={errors.credit?.message || 'Bill amount credited to vendor'}
+              />
+            </>
+          )}
+
+          {!isVendorCategory && (
+            <TextField
+              fullWidth
+              label="Amount"
+              margin="normal"
+              type="number"
+              slotProps={{ htmlInput: { step: '0.01' } }}
+              {...register('amount', { valueAsNumber: true })}
+              error={!!errors.amount}
+              helperText={errors.amount?.message}
+            />
+          )}
           
           <TextField
             fullWidth

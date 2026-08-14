@@ -19,6 +19,7 @@ export interface Purchase {
   tax_rate: number;
   total_amount: number;
   paid_amount: number;
+  paid_description?: string;
   remaining_amount: number;
   transport_company?: string;
   transport_bilty_number?: string;
@@ -27,6 +28,10 @@ export interface Purchase {
   transport_paid_by?: 'Vendor' | 'Receiver';
   transport_payment_status?: 'Paid' | 'Pending';
   items: PurchaseItem[];
+  vendor?: {
+    id: string;
+    name: string;
+  };
   created_at: string;
   updated_at: string;
 }

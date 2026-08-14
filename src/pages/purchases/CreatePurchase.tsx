@@ -1,4 +1,5 @@
-import { Box, Typography, Button } from '@mui/material';
+import { useState } from 'react';
+import { Box, Typography, Button, Alert } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
 import { PurchaseForm } from '../../features/purchases/components/PurchaseForm';
@@ -8,10 +9,17 @@ import type { PurchaseFormInputs } from '../../features/purchases/schemas';
 export const CreatePurchase = () => {
   const navigate = useNavigate();
   const createMutation = useCreatePurchase();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = async (data: PurchaseFormInputs) => {
-    await createMutation.mutateAsync(data);
-    navigate('/purchases');
+    try {
+      setErrorMessage(null);
+      await createMutation.mutateAsync(data);
+      navigate('/purchases');
+    } catch (err: any) {
+      console.error('Failed to create purchase:', err);
+      setErrorMessage(err?.message || 'Failed to create purchase. Please check your data and try again.');
+    }
   };
 
   return (
@@ -23,6 +31,12 @@ export const CreatePurchase = () => {
         <Typography variant="h5">Create New Purchase Order</Typography>
       </Box>
 
+      {errorMessage && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setErrorMessage(null)}>
+          {errorMessage}
+        </Alert>
+      )}
+
       <PurchaseForm
         onSubmit={handleSubmit}
         onCancel={() => navigate('/purchases')}
@@ -30,3 +44,4 @@ export const CreatePurchase = () => {
     </Box>
   );
 };
+

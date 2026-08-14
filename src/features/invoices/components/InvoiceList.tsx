@@ -7,7 +7,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Tooltip from '@mui/material/Tooltip';
 import dayjs from 'dayjs';
 import type { Invoice } from '../types';
@@ -31,6 +31,7 @@ export const InvoiceList = ({ invoices, isLoading, onDelete, onManageCost }: Pro
         <TableHead>
           <TableRow>
             <TableCell>Invoice #</TableCell>
+            <TableCell>Client</TableCell>
             <TableCell>Date</TableCell>
             <TableCell align="right">Total</TableCell>
             <TableCell align="right">Cost</TableCell>
@@ -41,13 +42,13 @@ export const InvoiceList = ({ invoices, isLoading, onDelete, onManageCost }: Pro
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+              <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
                 <CircularProgress />
               </TableCell>
             </TableRow>
           ) : !invoices?.length ? (
             <TableRow>
-              <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+              <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
                 <Typography color="text.secondary">No invoices found.</Typography>
               </TableCell>
             </TableRow>
@@ -58,9 +59,20 @@ export const InvoiceList = ({ invoices, isLoading, onDelete, onManageCost }: Pro
                   <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
                     #{invoice.invoice_number}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {invoice.clients?.name || 'Unknown Client'}
-                  </Typography>
+                </TableCell>
+                <TableCell>
+                  {invoice.client_id ? (
+                    <Link
+                      to={`/clients/${invoice.client_id}`}
+                      style={{ textDecoration: 'none', color: '#1976d2', fontWeight: 600 }}
+                    >
+                      {invoice.clients?.name || 'View Client'}
+                    </Link>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      {invoice.clients?.name || '-'}
+                    </Typography>
+                  )}
                 </TableCell>
                 <TableCell>{dayjs(invoice.date).format('MMM D, YYYY')}</TableCell>
                 <TableCell align="right">
