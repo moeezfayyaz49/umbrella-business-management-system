@@ -6,7 +6,7 @@ import {
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import dayjs from 'dayjs';
 import type { Purchase } from '../types';
 import { useSettings } from '../../settings/hooks/useSettings';
@@ -28,6 +28,7 @@ export const PurchaseList = ({ purchases, isLoading, onDelete }: Props) => {
         <TableHead>
           <TableRow>
             <TableCell>Purchase #</TableCell>
+            <TableCell>Vendor</TableCell>
             <TableCell>Date</TableCell>
             <TableCell align="right">Total</TableCell>
             <TableCell align="right">Paid</TableCell>
@@ -38,13 +39,13 @@ export const PurchaseList = ({ purchases, isLoading, onDelete }: Props) => {
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+              <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
                 <CircularProgress />
               </TableCell>
             </TableRow>
           ) : !purchases?.length ? (
             <TableRow>
-              <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+              <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
                 <Typography color="text.secondary">No purchases found.</Typography>
               </TableCell>
             </TableRow>
@@ -52,6 +53,18 @@ export const PurchaseList = ({ purchases, isLoading, onDelete }: Props) => {
             purchases.map((purchase) => (
               <TableRow key={purchase.id} hover>
                 <TableCell>{purchase.purchase_number}</TableCell>
+                <TableCell>
+                  {purchase.vendor ? (
+                    <Link
+                      to={`/vendors/${purchase.vendor.id}`}
+                      style={{ textDecoration: 'none', color: '#1976d2', fontWeight: 600 }}
+                    >
+                      {purchase.vendor.name}
+                    </Link>
+                  ) : (
+                    '-'
+                  )}
+                </TableCell>
                 <TableCell>{dayjs(purchase.date).format('MMM D, YYYY')}</TableCell>
                 <TableCell align="right">
                   {formatCurrency(purchase.total_amount, settings?.currency)}

@@ -1,6 +1,6 @@
 import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Divider } from '@mui/material';
 import dayjs from 'dayjs';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useInvoice } from '../hooks/useInvoice';
 import { useSettings } from '../../settings/hooks/useSettings';
 import { useClient } from '../../clients/hooks/useClient';
@@ -43,7 +43,15 @@ export const InvoiceView = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
         <Box>
           <Typography variant="subtitle2" color="text.secondary">BILL TO</Typography>
-          <Typography variant="h6">{client?.name || 'Loading...'}</Typography>
+          {invoice.client_id ? (
+            <Link to={`/clients/${invoice.client_id}`} style={{ textDecoration: 'none', color: '#1976d2' }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, '&:hover': { textDecoration: 'underline' } }}>
+                {client?.name || 'Loading...'}
+              </Typography>
+            </Link>
+          ) : (
+            <Typography variant="h6">{client?.name || 'Loading...'}</Typography>
+          )}
           <Typography variant="body2">{client?.address}</Typography>
           <Typography variant="body2">{client?.phones?.join(', ') || '-'}</Typography>
         </Box>

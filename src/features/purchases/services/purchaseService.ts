@@ -16,7 +16,7 @@ export const purchaseService = {
   getPurchases: async (): Promise<Purchase[]> => {
     const { data, error } = await supabase
       .from('purchases')
-      .select('*, items:purchase_items(*)')
+      .select('*, items:purchase_items(*), vendor:vendors(id, name)')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -26,7 +26,7 @@ export const purchaseService = {
   getPurchase: async (id: string): Promise<Purchase> => {
     const { data, error } = await supabase
       .from('purchases')
-      .select('*, items:purchase_items(*)')
+      .select('*, items:purchase_items(*), vendor:vendors(id, name)')
       .eq('id', id)
       .single();
 

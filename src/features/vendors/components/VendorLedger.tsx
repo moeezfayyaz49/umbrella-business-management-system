@@ -5,7 +5,10 @@ import {
 } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import dayjs from 'dayjs';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import dayjs, { Dayjs } from 'dayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { useState } from 'react';
 import type { VendorLedgerEntry, Vendor } from '../types';
 import { useSettings } from '../../settings/hooks/useSettings';
 import { formatCurrency } from '../../../utils/currency';
@@ -25,6 +28,16 @@ interface Props {
 
 export const VendorLedger = ({ vendor, ledgerEntries, isLoading, onEditTransaction, onDeleteTransaction }: Props) => {
   const { data: settings } = useSettings();
+  const [startDate, setStartDate] = useState<Dayjs | null>(null);
+  const [endDate, setEndDate] = useState<Dayjs | null>(null);
+
+  const filteredEntries = ledgerEntries?.filter((entry) => {
+    const entryDate = dayjs(entry.date).format('YYYY-MM-DD');
+    if (startDate && entryDate < startDate.format('YYYY-MM-DD')) return false;
+    if (endDate && entryDate > endDate.format('YYYY-MM-DD')) return false;
+    return true;
+  });
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
@@ -41,6 +54,11 @@ export const VendorLedger = ({ vendor, ledgerEntries, isLoading, onEditTransacti
               Notes: {vendor.notes}
             </Typography>
           )}
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="h6" color="primary">
+              Closing Balance: {formatCurrency(vendor?.closing_balance || 0, settings?.currency)}
+            </Typography>
+          </Box>
         </Box>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button variant="outlined" startIcon={<PrintIcon />} onClick={() => window.print()}>
@@ -51,6 +69,41 @@ export const VendorLedger = ({ vendor, ledgerEntries, isLoading, onEditTransacti
           </Button>
         </Box>
       </Box>
+
+      {/* Date Duration Filter Bar */}
+      <Paper elevation={1} sx={{ p: 2, mb: 3, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <FilterListIcon color="action" />
+          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Filter by Date Duration:</Typography>
+        </Box>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}>
+          <DatePicker
+            label="Start Date"
+            value={startDate}
+            onChange={(newValue) => setStartDate(newValue)}
+            slotProps={{ textField: { size: 'small', sx: { width: 170 } } }}
+          />
+          <DatePicker
+            label="End Date"
+            value={endDate}
+            onChange={(newValue) => setEndDate(newValue)}
+            slotProps={{ textField: { size: 'small', sx: { width: 170 } } }}
+          />
+          {(startDate || endDate) && (
+            <Button
+              size="small"
+              variant="outlined"
+              color="error"
+              onClick={() => {
+                setStartDate(null);
+                setEndDate(null);
+              }}
+            >
+              Clear Filter
+            </Button>
+          )}
+        </Box>
+      </Paper>
 
       <TableContainer component={Paper} elevation={2}>
         <Table sx={{ minWidth: 650 }}>
@@ -67,18 +120,18 @@ export const VendorLedger = ({ vendor, ledgerEntries, isLoading, onEditTransacti
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+                <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
                   <CircularProgress />
                 </TableCell>
               </TableRow>
-            ) : !ledgerEntries?.length ? (
+            ) : !filteredEntries?.length ? (
               <TableRow>
                 <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
-                  <Typography color="text.secondary">No transactions recorded.</Typography>
+                  <Typography color="text.secondary">No transactions found for the selected period.</Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              ledgerEntries.map((entry) => (
+              filteredEntries.map((entry) => (
                 <TableRow key={entry.id} hover>
                   <TableCell>{dayjs(entry.date).format('MMM D, YYYY')}</TableCell>
                   <TableCell>
