@@ -31,6 +31,9 @@ export const useDeleteExpense = () => {
     mutationFn: (id: string) => expenseService.deleteExpense(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['purchases'] });
+      queryClient.invalidateQueries({ queryKey: ['vendors'] });
+      queryClient.invalidateQueries({ queryKey: ['vendorLedger'] });
     },
   });
 };

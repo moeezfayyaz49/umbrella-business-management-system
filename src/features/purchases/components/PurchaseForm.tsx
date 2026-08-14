@@ -43,6 +43,7 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
       discount: 0,
       tax_rate: 0,
       paid_amount: 0,
+      paid_description: '',
       transport_company: '',
       transport_bilty_number: '',
       transport_from_city: '',
@@ -71,6 +72,7 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
         discount: initialData.discount,
         tax_rate: initialData.tax_rate,
         paid_amount: initialData.paid_amount,
+        paid_description: initialData.paid_description || '',
         transport_company: initialData.transport_company || '',
         transport_bilty_number: initialData.transport_bilty_number || '',
         transport_from_city: initialData.transport_from_city || '',
@@ -332,6 +334,17 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
                 slotProps={{ htmlInput: { step: '0.01' } }}
                 {...register('paid_amount', { valueAsNumber: true })}
                 error={!!errors.paid_amount}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
+              <Typography sx={{ flexShrink: 0, width: 80 }}>Paid Notes:</Typography>
+              <TextField
+                size="small"
+                fullWidth
+                placeholder="Payment description / notes..."
+                {...register('paid_description')}
+                error={!!errors.paid_description}
+                helperText={errors.paid_description?.message}
               />
             </Box>
             <Divider sx={{ my: 2 }} />

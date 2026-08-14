@@ -147,6 +147,38 @@ export const vendorService = {
   },
 
   deleteLedgerEntry: async (id: string): Promise<void> => {
+    // 1. Fetch ledger entry details
+    const { data: entry } = await supabase
+      .from('vendor_ledger_entries')
+      .select('id, reference_id')
+      .eq('id', id)
+      .maybeSingle();
+
+    // 2. Delete associated expense if reference = 'vendor_ledger_' + id
+    await supabase
+      .from('expenses')
+      .delete()
+      .eq('reference', 'vendor_ledger_' + id);
+
+    // 3. If this ledger entry is linked to a purchase, delete linked expenses & purchase
+    if (entry?.reference_id) {
+      await supabase
+        .from('expenses')
+        .delete()
+        .or(`purchase_id.eq.${entry.reference_id},reference.eq.transport_purchase_${entry.reference_id}`);
+
+      await supabase
+        .from('purchase_items')
+        .delete()
+        .eq('purchase_id', entry.reference_id);
+
+      await supabase
+        .from('purchases')
+        .delete()
+        .eq('id', entry.reference_id);
+    }
+
+    // 4. Delete the vendor ledger entry
     const { error } = await supabase
       .from('vendor_ledger_entries')
       .delete()

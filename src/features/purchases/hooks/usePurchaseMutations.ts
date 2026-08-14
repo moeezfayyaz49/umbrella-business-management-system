@@ -32,6 +32,9 @@ export const useDeletePurchase = () => {
     mutationFn: (id: string) => purchaseService.deletePurchase(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchases'] });
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['vendors'] });
+      queryClient.invalidateQueries({ queryKey: ['vendorLedger'] });
     },
   });
 };

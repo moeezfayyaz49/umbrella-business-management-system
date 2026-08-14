@@ -62,6 +62,9 @@ export const useDeleteVendorLedgerEntry = (vendorId: string) => {
     mutationFn: (id: string) => vendorService.deleteLedgerEntry(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vendorLedger', vendorId] });
+      queryClient.invalidateQueries({ queryKey: ['vendors'] });
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['purchases'] });
     }
   });
 };

@@ -19,6 +19,7 @@ export interface Purchase {
   tax_rate: number;
   total_amount: number;
   paid_amount: number;
+  paid_description?: string;
   remaining_amount: number;
   transport_company?: string;
   transport_bilty_number?: string;

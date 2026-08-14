@@ -36,7 +36,7 @@ export const purchaseService = {
 
   createPurchase: async (data: PurchaseFormInputs): Promise<Purchase> => {
     const { total_amount, remaining_amount } = calculateTotals(data);
-    const { items, ...purchaseData } = data;
+    const { items, paid_description, ...purchaseData } = data;
 
     // 1. Insert purchase
     const { data: newPurchase, error: purchaseError } = await supabase
@@ -50,6 +50,16 @@ export const purchaseService = {
       .single();
 
     if (purchaseError) throw purchaseError;
+
+    // Sync custom paid description with vendor ledger entry if provided
+    if (paid_description) {
+      await supabase
+        .from('vendor_ledger_entries')
+        .update({
+          description: `Purchase #${newPurchase.purchase_number} (${paid_description})`
+        })
+        .eq('reference_id', newPurchase.id);
+    }
 
     // 2. Insert items
     if (items && items.length > 0) {
@@ -77,7 +87,7 @@ export const purchaseService = {
 
   updatePurchase: async (id: string, data: PurchaseFormInputs): Promise<Purchase> => {
     const { total_amount, remaining_amount } = calculateTotals(data);
-    const { items, ...purchaseData } = data;
+    const { items, paid_description, ...purchaseData } = data;
 
     // 1. Update purchase header
     const { error: updateError } = await supabase
@@ -91,6 +101,16 @@ export const purchaseService = {
       .eq('id', id);
 
     if (updateError) throw updateError;
+
+    // Sync custom paid description with vendor ledger entry if provided
+    if (paid_description) {
+      await supabase
+        .from('vendor_ledger_entries')
+        .update({
+          description: `Purchase #${purchaseData.purchase_number} (${paid_description})`
+        })
+        .eq('reference_id', id);
+    }
 
     // 2. Delete existing items
     const { error: deleteError } = await supabase
@@ -126,6 +146,40 @@ export const purchaseService = {
   },
 
   deletePurchase: async (id: string): Promise<void> => {
+    // 1. Find all vendor_ledger_entries linked to this purchase
+    const { data: ledgerEntries } = await supabase
+      .from('vendor_ledger_entries')
+      .select('id')
+      .eq('reference_id', id);
+
+    if (ledgerEntries && ledgerEntries.length > 0) {
+      const ledgerIds = ledgerEntries.map(e => 'vendor_ledger_' + e.id);
+      // Delete expenses created from vendor payment ledger entries
+      await supabase
+        .from('expenses')
+        .delete()
+        .in('reference', ledgerIds);
+
+      // Delete vendor_ledger_entries for this purchase
+      await supabase
+        .from('vendor_ledger_entries')
+        .delete()
+        .eq('reference_id', id);
+    }
+
+    // 2. Delete any expenses directly referencing purchase_id or transport_purchase_
+    await supabase
+      .from('expenses')
+      .delete()
+      .or(`purchase_id.eq.${id},reference.eq.transport_purchase_${id}`);
+
+    // 3. Delete items
+    await supabase
+      .from('purchase_items')
+      .delete()
+      .eq('purchase_id', id);
+
+    // 4. Delete purchase header
     const { error } = await supabase
       .from('purchases')
       .delete()
