@@ -6,7 +6,8 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import { useNavigate } from 'react-router-dom';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import { useNavigate, Link } from 'react-router-dom';
 import dayjs from 'dayjs';
 import type { Expense } from '../types';
 import { useExpenseCategories } from '../hooks/useExpenseCategories';
@@ -36,6 +37,7 @@ export const ExpenseList = ({ expenses, isLoading, onEdit, onDelete }: Props) =>
           <TableRow>
             <TableCell>Date</TableCell>
             <TableCell>Category</TableCell>
+            <TableCell>Vendor</TableCell>
             <TableCell>Description</TableCell>
             <TableCell>Reference</TableCell>
             <TableCell align="right">Amount</TableCell>
@@ -45,13 +47,13 @@ export const ExpenseList = ({ expenses, isLoading, onEdit, onDelete }: Props) =>
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+              <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
                 <CircularProgress />
               </TableCell>
             </TableRow>
           ) : !expenses?.length ? (
             <TableRow>
-              <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+              <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
                 <Typography color="text.secondary">No expenses found.</Typography>
               </TableCell>
             </TableRow>
@@ -62,6 +64,18 @@ export const ExpenseList = ({ expenses, isLoading, onEdit, onDelete }: Props) =>
                 <TableCell>
                   <Chip label={getCategoryName(expense.category_id)} size="small" />
                 </TableCell>
+                <TableCell>
+                  {expense.vendor ? (
+                    <Link
+                      to={`/vendors/${expense.vendor.id}`}
+                      style={{ textDecoration: 'none', color: '#1976d2', fontWeight: 600 }}
+                    >
+                      {expense.vendor.name}
+                    </Link>
+                  ) : (
+                    '-'
+                  )}
+                </TableCell>
                 <TableCell>{expense.description}</TableCell>
                 <TableCell>{expense.reference}</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold' }}>
@@ -69,6 +83,17 @@ export const ExpenseList = ({ expenses, isLoading, onEdit, onDelete }: Props) =>
                 </TableCell>
                 <TableCell align="center">
                   <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                    {expense.vendor && (
+                      <Tooltip title="View Vendor Details & Transactions">
+                        <IconButton
+                          size="small"
+                          color="secondary"
+                          onClick={() => navigate(`/vendors/${expense.vendor!.id}`)}
+                        >
+                          <StorefrontIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
                     {expense.purchase_id && (
                       <Tooltip title="View Purchase">
                         <IconButton size="small" color="info" onClick={() => navigate(`/purchases/${expense.purchase_id}`)}>

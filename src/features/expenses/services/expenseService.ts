@@ -4,14 +4,61 @@ import { supabase } from '../../../lib/supabase';
 
 export const expenseService = {
   getExpenses: async (): Promise<Expense[]> => {
-    const { data, error } = await supabase
+    const { data: rawExpenses, error } = await supabase
       .from('expenses')
-      .select('*')
+      .select('*, purchase:purchases(id, purchase_number, vendor_id, vendor:vendors(id, name))')
       .order('date', { ascending: false })
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data as Expense[];
+
+    const expenses = (rawExpenses || []) as any[];
+
+    // Extract vendor ledger entry IDs to resolve vendors for vendor payment expenses
+    const vendorLedgerIds = expenses
+      .filter(e => e.reference && typeof e.reference === 'string' && e.reference.startsWith('vendor_ledger_'))
+      .map(e => e.reference.replace('vendor_ledger_', ''));
+
+    let ledgerVendorMap: Record<string, { id: string; name: string }> = {};
+    if (vendorLedgerIds.length > 0) {
+      const { data: ledgerEntries } = await supabase
+        .from('vendor_ledger_entries')
+        .select('id, vendor_id, vendor:vendors(id, name)')
+        .in('id', vendorLedgerIds);
+
+      if (ledgerEntries) {
+        ledgerEntries.forEach((entry: any) => {
+          if (entry.vendor) {
+            ledgerVendorMap[entry.id] = {
+              id: entry.vendor.id,
+              name: entry.vendor.name,
+            };
+          }
+        });
+      }
+    }
+
+    return expenses.map(exp => {
+      let vendor: { id: string; name: string } | undefined = undefined;
+
+      if (exp.purchase?.vendor) {
+        vendor = {
+          id: exp.purchase.vendor.id,
+          name: exp.purchase.vendor.name,
+        };
+      } else if (exp.reference && typeof exp.reference === 'string' && exp.reference.startsWith('vendor_ledger_')) {
+        const ledgerId = exp.reference.replace('vendor_ledger_', '');
+        if (ledgerVendorMap[ledgerId]) {
+          vendor = ledgerVendorMap[ledgerId];
+        }
+      }
+
+      const { purchase, ...rest } = exp;
+      return {
+        ...rest,
+        vendor,
+      } as Expense;
+    });
   },
 
   getExpense: async (id: string): Promise<Expense> => {

@@ -6,7 +6,7 @@ export const vendorService = {
   getVendors: async (searchQuery?: string): Promise<Vendor[]> => {
     let query = supabase
       .from('vendors')
-      .select('*')
+      .select('*, vendor_ledger_entries(debit, credit)')
       .order('created_at', { ascending: false });
 
     if (searchQuery) {
@@ -16,18 +16,42 @@ export const vendorService = {
     const { data, error } = await query;
 
     if (error) throw error;
-    return data as Vendor[];
+
+    return (data as any[]).map(vendor => {
+      const ledgerEntries = vendor.vendor_ledger_entries || [];
+      const totalDebit = ledgerEntries.reduce((sum: number, entry: any) => sum + (Number(entry.debit) || 0), 0);
+      const totalCredit = ledgerEntries.reduce((sum: number, entry: any) => sum + (Number(entry.credit) || 0), 0);
+      const closing_balance = Number(vendor.opening_balance || 0) + totalCredit - totalDebit;
+
+      const { vendor_ledger_entries, ...rest } = vendor;
+
+      return {
+        ...rest,
+        closing_balance
+      } as Vendor;
+    });
   },
 
   getVendor: async (id: string): Promise<Vendor> => {
     const { data, error } = await supabase
       .from('vendors')
-      .select('*')
+      .select('*, vendor_ledger_entries(debit, credit)')
       .eq('id', id)
       .single();
 
     if (error) throw error;
-    return data as Vendor;
+
+    const ledgerEntries = data.vendor_ledger_entries || [];
+    const totalDebit = ledgerEntries.reduce((sum: number, entry: any) => sum + (Number(entry.debit) || 0), 0);
+    const totalCredit = ledgerEntries.reduce((sum: number, entry: any) => sum + (Number(entry.credit) || 0), 0);
+    const closing_balance = Number(data.opening_balance || 0) + totalCredit - totalDebit;
+
+    const { vendor_ledger_entries, ...rest } = data;
+
+    return {
+      ...rest,
+      closing_balance
+    } as Vendor;
   },
 
   createVendor: async (vendorData: VendorFormInputs): Promise<Vendor> => {

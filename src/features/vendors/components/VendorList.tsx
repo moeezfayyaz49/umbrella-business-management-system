@@ -30,19 +30,20 @@ export const VendorList = ({ vendors, isLoading, onEdit, onDelete }: Props) => {
             <TableCell>Name</TableCell>
             <TableCell>Phones</TableCell>
             <TableCell align="right">Opening Balance</TableCell>
+            <TableCell align="right">Closing Balance</TableCell>
             <TableCell align="center">Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
+              <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
                 <CircularProgress />
               </TableCell>
             </TableRow>
           ) : !vendors?.length ? (
             <TableRow>
-              <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
+              <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
                 <Typography color="text.secondary">No vendors found.</Typography>
               </TableCell>
             </TableRow>
@@ -53,6 +54,9 @@ export const VendorList = ({ vendors, isLoading, onEdit, onDelete }: Props) => {
                 <TableCell>{vendor.phones?.join(', ') || '-'}</TableCell>
                 <TableCell align="right">
                   {formatCurrency(vendor.opening_balance, settings?.currency)}
+                </TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                  {formatCurrency(vendor.closing_balance || 0, settings?.currency)}
                 </TableCell>
                 <TableCell align="center">
                   <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
