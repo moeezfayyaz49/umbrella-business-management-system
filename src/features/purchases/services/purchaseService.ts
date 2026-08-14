@@ -12,6 +12,12 @@ const calculateTotals = (data: PurchaseFormInputs) => {
   return { total_amount, remaining_amount };
 };
 
+const extractPaidDescription = (description?: string | null): string => {
+  if (!description) return '';
+  const match = description.match(/\((.*)\)$/);
+  return match && match[1] ? match[1] : '';
+};
+
 export const purchaseService = {
   getPurchases: async (): Promise<Purchase[]> => {
     const { data, error } = await supabase
@@ -20,7 +26,35 @@ export const purchaseService = {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data as Purchase[];
+
+    const purchases = (data || []) as Purchase[];
+    const purchaseIds = purchases.map(p => p.id);
+
+    if (purchaseIds.length > 0) {
+      const { data: ledgerEntries } = await supabase
+        .from('vendor_ledger_entries')
+        .select('reference_id, description')
+        .in('reference_id', purchaseIds);
+
+      if (ledgerEntries && ledgerEntries.length > 0) {
+        const ledgerNotesMap = new Map<string, string>();
+        ledgerEntries.forEach(entry => {
+          if (entry.reference_id && entry.description) {
+            const note = extractPaidDescription(entry.description);
+            if (note) {
+              ledgerNotesMap.set(entry.reference_id, note);
+            }
+          }
+        });
+
+        return purchases.map(p => ({
+          ...p,
+          paid_description: p.paid_description || ledgerNotesMap.get(p.id) || '',
+        }));
+      }
+    }
+
+    return purchases;
   },
 
   getPurchase: async (id: string): Promise<Purchase> => {
@@ -31,7 +65,26 @@ export const purchaseService = {
       .single();
 
     if (error) throw error;
-    return data as Purchase;
+
+    const purchase = data as Purchase;
+    let paid_description = purchase.paid_description || '';
+
+    if (!paid_description) {
+      const { data: ledgerEntry } = await supabase
+        .from('vendor_ledger_entries')
+        .select('description')
+        .eq('reference_id', id)
+        .maybeSingle();
+
+      if (ledgerEntry?.description) {
+        paid_description = extractPaidDescription(ledgerEntry.description);
+      }
+    }
+
+    return {
+      ...purchase,
+      paid_description,
+    };
   },
 
   createPurchase: async (data: PurchaseFormInputs): Promise<Purchase> => {
@@ -52,13 +105,38 @@ export const purchaseService = {
     if (purchaseError) throw purchaseError;
 
     // Sync custom paid description with vendor ledger entry if provided
-    if (paid_description) {
+    const ledgerDescription = paid_description
+      ? `Purchase #${newPurchase.purchase_number} (${paid_description})`
+      : `Purchase #${newPurchase.purchase_number}`;
+
+    const { data: existingLedger } = await supabase
+      .from('vendor_ledger_entries')
+      .select('id')
+      .eq('reference_id', newPurchase.id)
+      .maybeSingle();
+
+    if (existingLedger) {
       await supabase
         .from('vendor_ledger_entries')
         .update({
-          description: `Purchase #${newPurchase.purchase_number} (${paid_description})`
+          vendor_id: purchaseData.vendor_id,
+          date: purchaseData.date,
+          credit: total_amount,
+          debit: purchaseData.paid_amount,
+          description: ledgerDescription,
         })
         .eq('reference_id', newPurchase.id);
+    } else {
+      await supabase
+        .from('vendor_ledger_entries')
+        .insert([{
+          vendor_id: purchaseData.vendor_id,
+          date: purchaseData.date,
+          credit: total_amount,
+          debit: purchaseData.paid_amount,
+          description: ledgerDescription,
+          reference_id: newPurchase.id,
+        }]);
     }
 
     // 2. Insert items
@@ -102,14 +180,39 @@ export const purchaseService = {
 
     if (updateError) throw updateError;
 
-    // Sync custom paid description with vendor ledger entry if provided
-    if (paid_description) {
+    // Sync custom paid description with vendor ledger entry
+    const ledgerDescription = paid_description
+      ? `Purchase #${purchaseData.purchase_number} (${paid_description})`
+      : `Purchase #${purchaseData.purchase_number}`;
+
+    const { data: existingLedger } = await supabase
+      .from('vendor_ledger_entries')
+      .select('id')
+      .eq('reference_id', id)
+      .maybeSingle();
+
+    if (existingLedger) {
       await supabase
         .from('vendor_ledger_entries')
         .update({
-          description: `Purchase #${purchaseData.purchase_number} (${paid_description})`
+          vendor_id: purchaseData.vendor_id,
+          date: purchaseData.date,
+          credit: total_amount,
+          debit: purchaseData.paid_amount,
+          description: ledgerDescription,
         })
         .eq('reference_id', id);
+    } else {
+      await supabase
+        .from('vendor_ledger_entries')
+        .insert([{
+          vendor_id: purchaseData.vendor_id,
+          date: purchaseData.date,
+          credit: total_amount,
+          debit: purchaseData.paid_amount,
+          description: ledgerDescription,
+          reference_id: id,
+        }]);
     }
 
     // 2. Delete existing items
@@ -123,7 +226,6 @@ export const purchaseService = {
     // 3. Insert new items
     if (items && items.length > 0) {
       const itemsToInsert = items.map(item => ({
-        ...(item.id ? { id: item.id } : {}),
         purchase_id: id,
         description: item.description,
         quantity: item.quantity,

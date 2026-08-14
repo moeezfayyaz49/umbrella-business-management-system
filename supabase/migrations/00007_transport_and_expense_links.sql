@@ -1,24 +1,24 @@
 -- Add transport details to purchases
 ALTER TABLE public.purchases
-ADD COLUMN transport_company TEXT,
-ADD COLUMN transport_bilty_number TEXT,
-ADD COLUMN transport_from_city TEXT,
-ADD COLUMN transport_charges NUMERIC(10, 2) DEFAULT 0,
-ADD COLUMN transport_paid_by TEXT CHECK (transport_paid_by IN ('Vendor', 'Receiver')),
-ADD COLUMN transport_payment_status TEXT CHECK (transport_payment_status IN ('Paid', 'Pending'));
+ADD COLUMN IF NOT EXISTS transport_company TEXT,
+ADD COLUMN IF NOT EXISTS transport_bilty_number TEXT,
+ADD COLUMN IF NOT EXISTS transport_from_city TEXT,
+ADD COLUMN IF NOT EXISTS transport_charges NUMERIC(10, 2) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS transport_paid_by TEXT CHECK (transport_paid_by IN ('Vendor', 'Receiver')),
+ADD COLUMN IF NOT EXISTS transport_payment_status TEXT CHECK (transport_payment_status IN ('Paid', 'Pending'));
 
 -- Add transport details to invoices
 ALTER TABLE public.invoices
-ADD COLUMN transport_company TEXT,
-ADD COLUMN transport_bilty_number TEXT,
-ADD COLUMN transport_destination_city TEXT,
-ADD COLUMN transport_charges NUMERIC(10, 2) DEFAULT 0,
-ADD COLUMN transport_paid_by TEXT CHECK (transport_paid_by IN ('Client', 'Sender')),
-ADD COLUMN transport_remarks TEXT;
+ADD COLUMN IF NOT EXISTS transport_company TEXT,
+ADD COLUMN IF NOT EXISTS transport_bilty_number TEXT,
+ADD COLUMN IF NOT EXISTS transport_destination_city TEXT,
+ADD COLUMN IF NOT EXISTS transport_charges NUMERIC(10, 2) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS transport_paid_by TEXT CHECK (transport_paid_by IN ('Client', 'Sender')),
+ADD COLUMN IF NOT EXISTS transport_remarks TEXT;
 
 -- Add purchase reference to expenses
 ALTER TABLE public.expenses
-ADD COLUMN purchase_id UUID REFERENCES public.purchases(id) ON DELETE SET NULL;
+ADD COLUMN IF NOT EXISTS purchase_id UUID REFERENCES public.purchases(id) ON DELETE SET NULL;
 
 -- Trigger to handle transport expense for purchases
 CREATE OR REPLACE FUNCTION sync_purchase_transport_expense()

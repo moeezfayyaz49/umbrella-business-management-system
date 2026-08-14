@@ -24,9 +24,14 @@ export const PurchaseDetails = () => {
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/purchases')}>
           Back to Purchases
         </Button>
-        <Button variant="outlined" startIcon={<PrintIcon />} onClick={() => window.print()}>
-          Print
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button variant="contained" onClick={() => navigate(`/purchases/${id}/edit`)}>
+            Edit Purchase
+          </Button>
+          <Button variant="outlined" startIcon={<PrintIcon />} onClick={() => window.print()}>
+            Print
+          </Button>
+        </Box>
       </Box>
 
       {purchase && <PurchaseView purchase={purchase} />}
