@@ -1,5 +1,4 @@
 import { Box, Typography, Button, TextField } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
@@ -8,6 +7,8 @@ import { InvoiceList } from '../../features/invoices/components/InvoiceList';
 import { useInvoices } from '../../features/invoices/hooks/useInvoices';
 import { useDeleteInvoice, useUpdateInvoiceItemCosts } from '../../features/invoices/hooks/useInvoiceMutations';
 import { InvoiceCostDialog, type InvoiceCostFormInputs } from '../../features/invoices/components/InvoiceCostDialog';
+import { DateDurationFilter } from '../../components/common/DateDurationFilter';
+import { isDateWithinRange } from '../../utils/dateFilters';
 import type { Invoice } from '../../features/invoices/types';
 
 export const Invoices = () => {
@@ -18,7 +19,8 @@ export const Invoices = () => {
 
   const [isCostDialogOpen, setIsCostDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | undefined>();
-  const [filterDate, setFilterDate] = useState<Dayjs | null>(null);
+  const [startDate, setStartDate] = useState<Dayjs | null>(null);
+  const [endDate, setEndDate] = useState<Dayjs | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleOpenCostDialog = (invoice: Invoice) => {
@@ -49,10 +51,7 @@ export const Invoices = () => {
   };
 
   const filteredInvoices = invoices?.filter(invoice => {
-    let matchesDate = true;
-    if (filterDate) {
-      matchesDate = invoice.date.startsWith(filterDate.format('YYYY-MM-DD'));
-    }
+    const matchesDate = isDateWithinRange(invoice.date, startDate, endDate);
 
     let matchesSearch = true;
     if (searchQuery) {
@@ -67,25 +66,30 @@ export const Invoices = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
         <Typography variant="h4">Sales Invoices</Typography>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          <TextField
-            label="Search Client or City"
-            size="small"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <DatePicker
-            label="Filter by Date"
-            value={filterDate}
-            onChange={(newValue) => setFilterDate(newValue)}
-            slotProps={{ textField: { size: 'small' } }}
-          />
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/invoices/new')}>
-            Create Invoice
-          </Button>
-        </Box>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/invoices/new')}>
+          Create Invoice
+        </Button>
+      </Box>
+
+      {/* Filter and Search Bar */}
+      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap', mb: 3 }}>
+        <TextField
+          label="Search Client or City"
+          size="small"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{ minWidth: 220 }}
+        />
+        <DateDurationFilter
+          startDate={startDate}
+          endDate={endDate}
+          onDateChange={(start, end) => {
+            setStartDate(start);
+            setEndDate(end);
+          }}
+        />
       </Box>
 
       <InvoiceList
