@@ -1,14 +1,7 @@
--- 1. Enable pg_trgm for fast case-insensitive searching
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
+-- Fix RPC functions for Total Client Receivables and Total Vendor Payables
+-- Aggregate closing balance of all clients/vendors up to that specific month.
+-- If closing balance is 0, count opening balance for that client/vendor.
 
--- 2. Add GIN indexes on Clients and Vendors for the search fields
-CREATE INDEX IF NOT EXISTS idx_clients_name_trgm ON public.clients USING gin (name gin_trgm_ops);
-CREATE INDEX IF NOT EXISTS idx_clients_address_trgm ON public.clients USING gin (address gin_trgm_ops);
-
-CREATE INDEX IF NOT EXISTS idx_vendors_name_trgm ON public.vendors USING gin (name gin_trgm_ops);
-CREATE INDEX IF NOT EXISTS idx_vendors_address_trgm ON public.vendors USING gin (address gin_trgm_ops);
-
--- 3. Create RPC function for Total Client Receivables for a specific month
 CREATE OR REPLACE FUNCTION get_total_client_receivables(p_year INT, p_month INT)
 RETURNS NUMERIC AS $$
 DECLARE
@@ -41,7 +34,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 4. Create RPC function for Total Vendor Payables for a specific month
 CREATE OR REPLACE FUNCTION get_total_vendor_payables(p_year INT, p_month INT)
 RETURNS NUMERIC AS $$
 DECLARE
