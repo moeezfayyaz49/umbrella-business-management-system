@@ -1,13 +1,15 @@
 import { Box, Typography, Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { useState } from 'react';
 import { VendorList } from '../../features/vendors/components/VendorList';
 import { VendorFormDialog } from '../../features/vendors/components/VendorFormDialog';
+import { VendorTransferDialog } from '../../features/vendors/components/VendorTransferDialog';
 import { useVendors } from '../../features/vendors/hooks/useVendors';
-import { useCreateVendor, useUpdateVendor, useDeleteVendor } from '../../features/vendors/hooks/useVendorMutations';
+import { useCreateVendor, useUpdateVendor, useDeleteVendor, useCreateVendorTransfer } from '../../features/vendors/hooks/useVendorMutations';
 import { useDebounce } from '../../hooks/useDebounce';
 import type { Vendor } from '../../features/vendors/types';
-import type { VendorFormInputs } from '../../features/vendors/schemas';
+import type { VendorFormInputs, VendorTransferFormInputs } from '../../features/vendors/schemas';
 
 export const Vendors = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,10 +19,12 @@ export const Vendors = () => {
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | undefined>();
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
 
   const createMutation = useCreateVendor();
   const updateMutation = useUpdateVendor(editingVendor?.id || ''); // Dynamically pass ID
   const deleteMutation = useDeleteVendor();
+  const transferMutation = useCreateVendorTransfer();
 
   const handleOpenDialog = (vendor?: Vendor) => {
     setEditingVendor(vendor);
@@ -44,6 +48,10 @@ export const Vendors = () => {
     }
   };
 
+  const handleTransferSubmit = async (data: VendorTransferFormInputs) => {
+    await transferMutation.mutateAsync(data);
+  };
+
   const handleDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this vendor?')) {
       deleteMutation.mutate(id);
@@ -62,6 +70,14 @@ export const Vendors = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{ padding: '8px 12px', borderRadius: '4px', border: '1px solid #ccc', minWidth: '250px' }}
           />
+          <Button
+            variant="outlined"
+            color="secondary"
+            startIcon={<SwapHorizIcon />}
+            onClick={() => setIsTransferOpen(true)}
+          >
+            Transfer Bill / Balance
+          </Button>
           <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
             Add Vendor
           </Button>
@@ -81,6 +97,14 @@ export const Vendors = () => {
         onSubmit={handleSubmit}
         initialData={editingVendor}
       />
+
+      <VendorTransferDialog
+        open={isTransferOpen}
+        onClose={() => setIsTransferOpen(false)}
+        onSubmit={handleTransferSubmit}
+        isSubmitting={transferMutation.isPending}
+      />
     </Box>
   );
 };
+
