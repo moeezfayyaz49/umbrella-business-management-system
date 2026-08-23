@@ -1,11 +1,12 @@
 import {
   Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, CircularProgress, Typography,
-  Box, Button
+  Box, Button, Chip
 } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import dayjs, { Dayjs } from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useState } from 'react';
@@ -24,9 +25,17 @@ interface Props {
   isLoading: boolean;
   onEditTransaction?: (entry: VendorLedgerEntry) => void;
   onDeleteTransaction?: (id: string) => void;
+  onOpenTransfer?: () => void;
 }
 
-export const VendorLedger = ({ vendor, ledgerEntries, isLoading, onEditTransaction, onDeleteTransaction }: Props) => {
+export const VendorLedger = ({
+  vendor,
+  ledgerEntries,
+  isLoading,
+  onEditTransaction,
+  onDeleteTransaction,
+  onOpenTransfer
+}: Props) => {
   const { data: settings } = useSettings();
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
@@ -60,7 +69,17 @@ export const VendorLedger = ({ vendor, ledgerEntries, isLoading, onEditTransacti
             </Typography>
           </Box>
         </Box>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          {onOpenTransfer && (
+            <Button
+              variant="outlined"
+              color="secondary"
+              startIcon={<SwapHorizIcon />}
+              onClick={onOpenTransfer}
+            >
+              Transfer Bill / Balance
+            </Button>
+          )}
           <Button variant="outlined" startIcon={<PrintIcon />} onClick={() => window.print()}>
             Print
           </Button>
@@ -131,48 +150,95 @@ export const VendorLedger = ({ vendor, ledgerEntries, isLoading, onEditTransacti
                 </TableCell>
               </TableRow>
             ) : (
-              filteredEntries.map((entry) => (
-                <TableRow key={entry.id} hover>
-                  <TableCell>{dayjs(entry.date).format('MMM D, YYYY')}</TableCell>
-                  <TableCell>
-                    {entry.reference_id ? (
-                      <Link to={`/purchases/${entry.reference_id}`} style={{ textDecoration: 'none', color: 'inherit', fontWeight: 500 }}>
-                        {entry.description}
-                      </Link>
-                    ) : (
-                      entry.description
-                    )}
-                  </TableCell>
-                  <TableCell align="right">
-                    {entry.debit > 0 ? formatCurrency(entry.debit, settings?.currency) : '-'}
-                  </TableCell>
-                  <TableCell align="right">
-                    {entry.credit > 0 ? formatCurrency(entry.credit, settings?.currency) : '-'}
-                  </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 'bold' }}>
-                    {formatCurrency(entry.running_balance, settings?.currency)}
-                  </TableCell>
-                  <TableCell align="right">
-                    {entry.reference_id ? (
-                      <Tooltip title="This transaction is linked to a purchase and cannot be manually modified here. Edit the purchase instead.">
-                        <span>
-                          <IconButton size="small" disabled><EditIcon fontSize="small" /></IconButton>
-                          <IconButton size="small" disabled><DeleteIcon fontSize="small" /></IconButton>
-                        </span>
-                      </Tooltip>
-                    ) : (
-                      <>
-                        <IconButton size="small" color="primary" onClick={() => onEditTransaction?.(entry)}>
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton size="small" color="error" onClick={() => onDeleteTransaction?.(entry.id)}>
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))
+              filteredEntries.map((entry) => {
+                const isTransfer = !!entry.transfer_info;
+                const isPurchase = !isTransfer && !!entry.reference_id;
+
+                return (
+                  <TableRow key={entry.id} hover sx={isTransfer ? { backgroundColor: 'rgba(156, 39, 176, 0.02)' } : undefined}>
+                    <TableCell>{dayjs(entry.date).format('MMM D, YYYY')}</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                        {isTransfer ? (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                            <Chip
+                              size="small"
+                              icon={<SwapHorizIcon fontSize="small" />}
+                              label={
+                                entry.transfer_info?.type === 'to'
+                                  ? `→ Transferred to: ${entry.transfer_info.other_vendor_name}`
+                                  : `← Transferred from: ${entry.transfer_info?.other_vendor_name}`
+                              }
+                              component={Link}
+                              to={`/vendors/${entry.transfer_info?.other_vendor_id}`}
+                              clickable
+                              color={entry.transfer_info?.type === 'to' ? 'warning' : 'info'}
+                              variant="outlined"
+                              sx={{ fontWeight: 600, cursor: 'pointer' }}
+                            />
+                            {entry.transfer_info?.purchase_id && (
+                              <Chip
+                                size="small"
+                                label={`Bill #${entry.transfer_info.purchase_number || 'View'}`}
+                                component={Link}
+                                to={`/purchases/${entry.transfer_info.purchase_id}`}
+                                clickable
+                                color="default"
+                                variant="filled"
+                                sx={{ cursor: 'pointer' }}
+                              />
+                            )}
+                          </Box>
+                        ) : null}
+
+                        <Typography variant="body2" sx={{ color: isTransfer ? 'text.secondary' : 'text.primary' }}>
+                          {isPurchase ? (
+                            <Link to={`/purchases/${entry.reference_id}`} style={{ textDecoration: 'none', color: '#1976d2', fontWeight: 500 }}>
+                              {entry.description}
+                            </Link>
+                          ) : (
+                            entry.description
+                          )}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="right">
+                      {entry.debit > 0 ? formatCurrency(entry.debit, settings?.currency) : '-'}
+                    </TableCell>
+                    <TableCell align="right">
+                      {entry.credit > 0 ? formatCurrency(entry.credit, settings?.currency) : '-'}
+                    </TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                      {formatCurrency(entry.running_balance, settings?.currency)}
+                    </TableCell>
+                    <TableCell align="right">
+                      {isTransfer ? (
+                        <Tooltip title="Delete this vendor transfer (reverses on both vendors' ledgers)">
+                          <IconButton size="small" color="error" onClick={() => onDeleteTransaction?.(entry.id)}>
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      ) : isPurchase ? (
+                        <Tooltip title="This transaction is linked to a purchase and cannot be manually modified here. Edit the purchase instead.">
+                          <span>
+                            <IconButton size="small" disabled><EditIcon fontSize="small" /></IconButton>
+                            <IconButton size="small" disabled><DeleteIcon fontSize="small" /></IconButton>
+                          </span>
+                        </Tooltip>
+                      ) : (
+                        <>
+                          <IconButton size="small" color="primary" onClick={() => onEditTransaction?.(entry)}>
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton size="small" color="error" onClick={() => onDeleteTransaction?.(entry.id)}>
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -180,3 +246,4 @@ export const VendorLedger = ({ vendor, ledgerEntries, isLoading, onEditTransacti
     </Box>
   );
 };
+

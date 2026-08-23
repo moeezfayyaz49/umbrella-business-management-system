@@ -1,11 +1,12 @@
 import {
   Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, CircularProgress,
-  IconButton, Box, Typography
+  IconButton, Box, Typography, Tooltip
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { useNavigate, Link } from 'react-router-dom';
 import dayjs from 'dayjs';
 import type { Purchase } from '../types';
@@ -16,9 +17,10 @@ interface Props {
   purchases?: Purchase[];
   isLoading: boolean;
   onDelete: (id: string) => void;
+  onTransfer?: (purchase: Purchase) => void;
 }
 
-export const PurchaseList = ({ purchases, isLoading, onDelete }: Props) => {
+export const PurchaseList = ({ purchases, isLoading, onDelete, onTransfer }: Props) => {
   const { data: settings } = useSettings();
   const navigate = useNavigate();
 
@@ -76,16 +78,29 @@ export const PurchaseList = ({ purchases, isLoading, onDelete }: Props) => {
                   {formatCurrency(purchase.remaining_amount, settings?.currency)}
                 </TableCell>
                 <TableCell align="center">
-                  <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                    <IconButton size="small" color="info" onClick={() => navigate(`/purchases/${purchase.id}`)}>
-                      <VisibilityIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" color="primary" onClick={() => navigate(`/purchases/${purchase.id}/edit`)}>
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" color="error" onClick={() => onDelete(purchase.id)}>
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
+                    <Tooltip title="View Purchase Order">
+                      <IconButton size="small" color="info" onClick={() => navigate(`/purchases/${purchase.id}`)}>
+                        <VisibilityIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    {onTransfer && (
+                      <Tooltip title="Transfer this bill to another vendor">
+                        <IconButton size="small" color="secondary" onClick={() => onTransfer(purchase)}>
+                          <SwapHorizIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                    <Tooltip title="Edit Purchase">
+                      <IconButton size="small" color="primary" onClick={() => navigate(`/purchases/${purchase.id}/edit`)}>
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete Purchase">
+                      <IconButton size="small" color="error" onClick={() => onDelete(purchase.id)}>
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
                 </TableCell>
               </TableRow>
@@ -96,3 +111,4 @@ export const PurchaseList = ({ purchases, isLoading, onDelete }: Props) => {
     </TableContainer>
   );
 };
+

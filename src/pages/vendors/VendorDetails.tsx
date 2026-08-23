@@ -4,11 +4,14 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { VendorLedger } from '../../features/vendors/components/VendorLedger';
 import { useVendor } from '../../features/vendors/hooks/useVendor';
 import { useVendorLedger } from '../../features/vendors/hooks/useVendorLedger';
-import { useCreateVendorLedgerEntry, useUpdateVendorLedgerEntry, useDeleteVendorLedgerEntry } from '../../features/vendors/hooks/useVendorMutations';
+import { useCreateVendorLedgerEntry, useUpdateVendorLedgerEntry, useDeleteVendorLedgerEntry, useCreateVendorTransfer } from '../../features/vendors/hooks/useVendorMutations';
 import { LedgerEntryFormDialog, type LedgerEntryFormInputs } from '../../components/forms/LedgerEntryFormDialog';
+import { VendorTransferDialog } from '../../features/vendors/components/VendorTransferDialog';
 import { useState } from 'react';
 import type { VendorLedgerEntry } from '../../features/vendors/types';
+import type { VendorTransferFormInputs } from '../../features/vendors/schemas';
 import AddIcon from '@mui/icons-material/Add';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 
 export const VendorDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -20,9 +23,11 @@ export const VendorDetails = () => {
   const createMutation = useCreateVendorLedgerEntry(id || '');
   const updateMutation = useUpdateVendorLedgerEntry(id || '');
   const deleteMutation = useDeleteVendorLedgerEntry(id || '');
+  const transferMutation = useCreateVendorTransfer();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<VendorLedgerEntry | undefined>();
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
 
   const handleOpenDialog = (entry?: VendorLedgerEntry) => {
     setEditingEntry(entry);
@@ -46,6 +51,10 @@ export const VendorDetails = () => {
     }
   };
 
+  const handleTransferSubmit = async (data: VendorTransferFormInputs) => {
+    await transferMutation.mutateAsync(data);
+  };
+
   const handleDelete = (entryId: string) => {
     if (window.confirm('Are you sure you want to delete this transaction?')) {
       deleteMutation.mutate(entryId);
@@ -58,9 +67,19 @@ export const VendorDetails = () => {
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/vendors')}>
           Back to Vendors
         </Button>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
-          Add Transaction
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="outlined"
+            color="secondary"
+            startIcon={<SwapHorizIcon />}
+            onClick={() => setIsTransferOpen(true)}
+          >
+            Transfer Bill / Balance
+          </Button>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
+            Add Transaction
+          </Button>
+        </Box>
       </Box>
 
       <VendorLedger
@@ -69,6 +88,7 @@ export const VendorDetails = () => {
         isLoading={isVendorLoading || isLedgerLoading}
         onEditTransaction={handleOpenDialog}
         onDeleteTransaction={handleDelete}
+        onOpenTransfer={() => setIsTransferOpen(true)}
       />
 
       <LedgerEntryFormDialog
@@ -78,6 +98,15 @@ export const VendorDetails = () => {
         initialData={editingEntry}
         isSubmitting={createMutation.isPending || updateMutation.isPending}
       />
+
+      <VendorTransferDialog
+        open={isTransferOpen}
+        onClose={() => setIsTransferOpen(false)}
+        onSubmit={handleTransferSubmit}
+        initialFromVendorId={id}
+        isSubmitting={transferMutation.isPending}
+      />
     </Box>
   );
 };
+
