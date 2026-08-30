@@ -4,6 +4,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import { useNavigate, useParams } from 'react-router-dom';
 import { InvoiceView } from '../../features/invoices/components/InvoiceView';
 import { useInvoice } from '../../features/invoices/hooks/useInvoice';
+import { printDocument } from '../../utils/printDocument';
 
 export const InvoiceDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +25,15 @@ export const InvoiceDetails = () => {
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/invoices')}>
           Back to Invoices
         </Button>
-        <Button variant="outlined" startIcon={<PrintIcon />} onClick={() => window.print()}>
+        <Button
+          variant="outlined"
+          startIcon={<PrintIcon />}
+          onClick={() =>
+            printDocument({
+              title: invoice ? `Invoice ${invoice.invoice_number}` : 'Invoice',
+            })
+          }
+        >
           Print
         </Button>
       </Box>

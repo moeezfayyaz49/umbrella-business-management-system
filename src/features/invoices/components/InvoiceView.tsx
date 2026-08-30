@@ -76,17 +76,21 @@ export const InvoiceView = () => {
               <TableRow key={item.id}>
                 <TableCell>
                   {item.description}
-                  {(item.color || item.weight) && (
+                  {(item.color || item.weight || item.pricing_mode === 'weight') && (
                     <Typography variant="caption" sx={{ display: 'block' }} color="text.secondary">
                       {[
                         item.color,
-                        item.weight ? `${item.weight} ${item.weight_unit || ''}`.trim() : null
+                        item.weight ? `${item.weight} ${item.weight_unit || ''}`.trim() : null,
+                        item.pricing_mode === 'weight' ? 'priced by weight' : null,
                       ].filter(Boolean).join(' - ')}
                     </Typography>
                   )}
                 </TableCell>
                 <TableCell align="right">{item.quantity} {item.unit}</TableCell>
-                <TableCell align="right">{formatCurrency(item.unit_price, settings?.currency)}</TableCell>
+                <TableCell align="right">
+                  {formatCurrency(item.unit_price, settings?.currency)}
+                  {item.pricing_mode === 'weight' && item.weight_unit ? ` / ${item.weight_unit}` : ''}
+                </TableCell>
                 <TableCell align="right">{formatCurrency(item.total, settings?.currency)}</TableCell>
               </TableRow>
             ))}

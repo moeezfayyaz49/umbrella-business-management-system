@@ -8,6 +8,7 @@ export interface PurchaseItem {
   weight?: number;
   weight_unit?: string;
   color?: string;
+  pricing_mode?: 'quantity' | 'weight';
 }
 
 export interface Purchase {

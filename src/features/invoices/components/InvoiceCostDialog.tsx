@@ -12,6 +12,10 @@ const schema = z.object({
       description: z.string(),
       quantity: z.number(),
       unit_price: z.number(),
+      total: z.number(),
+      weight: z.number().optional().nullable(),
+      weight_unit: z.string().optional().nullable(),
+      color: z.string().optional().nullable(),
       cost: z.number().min(0, 'Cost cannot be negative'),
     })
   ),
@@ -54,13 +58,17 @@ export const InvoiceCostDialog = ({ open, onClose, onSubmit, invoice, isSubmitti
           quantity: item.quantity,
           unit_price: item.unit_price,
           cost: item.cost || 0,
+          total: item.total,
+          weight: item.weight ?? null,
+          weight_unit: item.weight_unit ?? null,
+          color: item.color ?? null,
         })),
       });
     }
   }, [open, invoice, reset]);
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
       <form onSubmit={handleSubmit(onSubmit)}>
         <DialogTitle>Manage Item Costs</DialogTitle>
         <DialogContent>
@@ -74,6 +82,8 @@ export const InvoiceCostDialog = ({ open, onClose, onSubmit, invoice, isSubmitti
               <TableHead>
                 <TableRow>
                   <TableCell>Description</TableCell>
+                  <TableCell>Color</TableCell>
+                  <TableCell align="right">Weight</TableCell>
                   <TableCell align="right">Qty</TableCell>
                   <TableCell align="right">Unit Price</TableCell>
                   <TableCell align="right">Total Price</TableCell>
@@ -85,9 +95,15 @@ export const InvoiceCostDialog = ({ open, onClose, onSubmit, invoice, isSubmitti
                 {fields.map((field, index) => (
                   <TableRow key={field.id}>
                     <TableCell>{field.description}</TableCell>
+                    <TableCell>{field.color || '—'}</TableCell>
+                    <TableCell align="right">
+                      {field.weight != null
+                        ? `${field.weight}${field.weight_unit ? ` ${field.weight_unit}` : ''}`
+                        : '—'}
+                    </TableCell>
                     <TableCell align="right">{field.quantity}</TableCell>
                     <TableCell align="right">{field.unit_price}</TableCell>
-                    <TableCell align="right">{field.quantity * field.unit_price}</TableCell>
+                    <TableCell align="right">{field.total}</TableCell>
                     <TableCell align="right">
                       <Controller
                         name={`items.${index}.cost`}

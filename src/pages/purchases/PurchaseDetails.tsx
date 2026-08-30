@@ -9,6 +9,7 @@ import { usePurchase } from '../../features/purchases/hooks/usePurchase';
 import { useCreateVendorTransfer } from '../../features/vendors/hooks/useVendorMutations';
 import { VendorTransferDialog } from '../../features/vendors/components/VendorTransferDialog';
 import type { VendorTransferFormInputs } from '../../features/vendors/schemas';
+import { printDocument } from '../../utils/printDocument';
 
 export const PurchaseDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -47,7 +48,15 @@ export const PurchaseDetails = () => {
           <Button variant="contained" onClick={() => navigate(`/purchases/${id}/edit`)}>
             Edit Purchase
           </Button>
-          <Button variant="outlined" startIcon={<PrintIcon />} onClick={() => window.print()}>
+          <Button
+            variant="outlined"
+            startIcon={<PrintIcon />}
+            onClick={() =>
+              printDocument({
+                title: purchase ? `Purchase ${purchase.purchase_number}` : 'Purchase Order',
+              })
+            }
+          >
             Print
           </Button>
         </Box>
