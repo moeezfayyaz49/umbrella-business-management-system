@@ -11,6 +11,7 @@ import { useAuthStore } from './store/authStore';
 import { supabase } from './lib/supabase';
 
 import { Role } from './types/auth';
+import './styles/print.css';
 
 const queryClient = new QueryClient();
 

@@ -31,7 +31,7 @@ export const PurchaseDetails = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 2 }}>
+      <Box className="no-print" sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 2 }}>
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/purchases')}>
           Back to Purchases
         </Button>

@@ -69,7 +69,7 @@ export const VendorLedger = ({
             </Typography>
           </Box>
         </Box>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+        <Box className="no-print" sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           {onOpenTransfer && (
             <Button
               variant="outlined"
