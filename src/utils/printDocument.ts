@@ -45,6 +45,9 @@ export function printDocument(options?: { title?: string; selector?: string }) {
   });
 
   const title = options?.title ?? document.title;
+  const previousTitle = document.title;
+  document.title = title;
+
   const collectedCss = collectDocumentCss();
 
   frameDoc.open();
@@ -61,6 +64,7 @@ export function printDocument(options?: { title?: string; selector?: string }) {
   frameDoc.close();
 
   const cleanup = () => {
+    document.title = previousTitle;
     iframe.remove();
   };
 
