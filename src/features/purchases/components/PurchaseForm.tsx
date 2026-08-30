@@ -248,9 +248,12 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
                 sx={{ width: 150 }}
                 label="Unit Price"
                 type="number"
-                slotProps={{ htmlInput: { step: '0.01' } }}
-                {...register(`items.${index}.unit_price`, { valueAsNumber: true })}
+                slotProps={{ htmlInput: { step: 'any', inputMode: 'decimal', min: 0 } }}
+                {...register(`items.${index}.unit_price`, {
+                  setValueAs: (v) => (v === '' || v === null || v === undefined ? 0 : Number(v)),
+                })}
                 error={!!errors.items?.[index]?.unit_price}
+                helperText={errors.items?.[index]?.unit_price?.message}
               />
               <Box sx={{ width: 100, display: 'flex', alignItems: 'center', height: '56px' }}>
                 <Typography sx={{ fontWeight: 'bold' }}>

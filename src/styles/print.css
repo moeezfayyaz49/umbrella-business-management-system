@@ -1,0 +1,79 @@
+/* Print: document only (no chrome), always light for readable paper output */
+@media print {
+  .no-print,
+  .MuiAppBar-root,
+  .MuiDrawer-root,
+  nav,
+  main > .MuiToolbar-root {
+    display: none !important;
+  }
+
+  html,
+  body,
+  #root {
+    background: #fff !important;
+    color: #000 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Collapse app shell so content uses full page width */
+  #root > .MuiBox-root {
+    display: block !important;
+    min-height: 0 !important;
+  }
+
+  main {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    color: #000 !important;
+    flex-grow: 0 !important;
+  }
+
+  /* Force light surfaces and readable text regardless of app theme */
+  .MuiPaper-root,
+  .MuiTableContainer-root,
+  .MuiTable-root,
+  .MuiTableCell-root,
+  .MuiTableHead-root,
+  .MuiTableBody-root,
+  .MuiTableRow-root {
+    background-color: #fff !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    border-color: #ccc !important;
+  }
+
+  .MuiTypography-root,
+  .MuiTableCell-root,
+  a {
+    color: #000 !important;
+  }
+
+  .MuiDivider-root {
+    border-color: #ccc !important;
+  }
+
+  .MuiTableHead-root {
+    background-color: #f0f0f0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  @page {
+    margin: 12mm;
+  }
+}

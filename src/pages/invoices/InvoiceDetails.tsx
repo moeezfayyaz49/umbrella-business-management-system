@@ -20,7 +20,7 @@ export const InvoiceDetails = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+      <Box className="no-print" sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/invoices')}>
           Back to Invoices
         </Button>

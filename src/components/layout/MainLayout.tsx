@@ -49,7 +49,7 @@ export const MainLayout = () => {
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       <CssBaseline />
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+      <AppBar position="fixed" className="no-print" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <Toolbar>
           {isMobile && (
             <IconButton
@@ -103,6 +103,7 @@ export const MainLayout = () => {
       
       <Box
         component="nav"
+        className="no-print"
         sx={{ width: { lg: drawerWidth }, flexShrink: { lg: 0 } }}
         aria-label="navigation folders"
       >
@@ -143,11 +144,12 @@ export const MainLayout = () => {
           width: isMobile ? '100%' : `calc(100% - ${drawerWidth}px)` 
         }}
       >
-        <Toolbar />
+        <Toolbar className="no-print" />
         <Outlet />
       </Box>
 
       <Dialog
+        className="no-print"
         open={logoutDialogOpen}
         onClose={handleLogoutCancel}
         aria-labelledby="logout-dialog-title"

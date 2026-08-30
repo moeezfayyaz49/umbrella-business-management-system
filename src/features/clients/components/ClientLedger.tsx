@@ -60,7 +60,7 @@ export const ClientLedger = ({ client, ledgerEntries, isLoading, onEditTransacti
             </Typography>
           </Box>
         </Box>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box className="no-print" sx={{ display: 'flex', gap: 2 }}>
           <Button variant="outlined" startIcon={<PrintIcon />} onClick={() => window.print()}>
             Print
           </Button>
