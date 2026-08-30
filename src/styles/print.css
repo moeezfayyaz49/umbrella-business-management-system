@@ -76,4 +76,9 @@
   @page {
     margin: 12mm;
   }
+
+  /* Never append link URLs in printed bills */
+  a[href]::after {
+    content: none !important;
+  }
 }

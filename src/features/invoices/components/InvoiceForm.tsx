@@ -1,10 +1,11 @@
 import {
   Box, Button, TextField, Typography, Paper,
   IconButton, Divider, Select, MenuItem, FormControl, InputLabel,
-  Accordion, AccordionSummary, AccordionDetails, Autocomplete
+  Accordion, AccordionSummary, AccordionDetails, Autocomplete, Tooltip
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import AddIcon from '@mui/icons-material/Add';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -66,7 +67,7 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
     }
   }, [settings?.invoice_prefix, initialData, reset]);
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, insert, remove } = useFieldArray({
     control,
     name: 'items',
   });
@@ -74,6 +75,21 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
   const watchItems = watch('items');
   const watchDiscount = watch('discount');
   const watchTaxRate = watch('tax_rate');
+
+  const copyLineItem = (index: number) => {
+    const item = watchItems?.[index];
+    if (!item) return;
+    insert(index + 1, {
+      description: item.description || '',
+      quantity: item.quantity || 1,
+      unit_price: item.unit_price || 0,
+      cost: item.cost,
+      unit: item.unit || 'Piece',
+      weight: item.weight ?? undefined,
+      weight_unit: item.weight_unit ?? '',
+      color: item.color ?? '',
+    });
+  };
 
   useEffect(() => {
     if (initialData) {
@@ -267,7 +283,12 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
                   {formatCurrency((watchItems?.[index]?.quantity || 0) * (watchItems?.[index]?.unit_price || 0), settings?.currency)}
                 </Typography>
               </Box>
-              <IconButton color="error" onClick={() => remove(index)} sx={{ mt: 1 }} disabled={fields.length === 1}>
+              <Tooltip title="Copy item">
+                <IconButton color="primary" onClick={() => copyLineItem(index)} sx={{ mt: 1 }} aria-label="Copy line item">
+                  <ContentCopyIcon />
+                </IconButton>
+              </Tooltip>
+              <IconButton color="error" onClick={() => remove(index)} sx={{ mt: 1 }} disabled={fields.length === 1} aria-label="Delete line item">
                 <DeleteIcon />
               </IconButton>
             </Box>
