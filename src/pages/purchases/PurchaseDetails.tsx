@@ -1,6 +1,7 @@
 import { Box, Button, CircularProgress } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PrintIcon from '@mui/icons-material/Print';
+import ImageIcon from '@mui/icons-material/Image';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState } from 'react';
@@ -10,6 +11,7 @@ import { useCreateVendorTransfer } from '../../features/vendors/hooks/useVendorM
 import { VendorTransferDialog } from '../../features/vendors/components/VendorTransferDialog';
 import type { VendorTransferFormInputs } from '../../features/vendors/schemas';
 import { printDocument } from '../../utils/printDocument';
+import { saveDocumentAsImage } from '../../utils/saveDocumentAsImage';
 
 export const PurchaseDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,9 +19,23 @@ export const PurchaseDetails = () => {
   const { data: purchase, isLoading } = usePurchase(id || '');
   const transferMutation = useCreateVendorTransfer();
   const [isTransferOpen, setIsTransferOpen] = useState(false);
+  const [savingImage, setSavingImage] = useState(false);
 
   const handleTransferSubmit = async (data: VendorTransferFormInputs) => {
     await transferMutation.mutateAsync(data);
+  };
+
+  const handleSaveAsImage = async () => {
+    try {
+      setSavingImage(true);
+      await saveDocumentAsImage({
+        title: purchase?.purchase_number || 'Purchase',
+      });
+    } catch (err) {
+      console.error('Failed to save purchase as image:', err);
+    } finally {
+      setSavingImage(false);
+    }
   };
 
   if (isLoading) {
@@ -50,10 +66,18 @@ export const PurchaseDetails = () => {
           </Button>
           <Button
             variant="outlined"
+            startIcon={<ImageIcon />}
+            onClick={handleSaveAsImage}
+            disabled={savingImage || !purchase}
+          >
+            {savingImage ? 'Saving…' : 'Save as Image'}
+          </Button>
+          <Button
+            variant="outlined"
             startIcon={<PrintIcon />}
             onClick={() =>
               printDocument({
-                title: purchase ? `Purchase ${purchase.purchase_number}` : 'Purchase Order',
+                title: purchase?.purchase_number || 'Purchase',
               })
             }
           >
@@ -77,4 +101,3 @@ export const PurchaseDetails = () => {
     </Box>
   );
 };
-

@@ -4,6 +4,7 @@ export const settingsSchema = z.object({
   company_name: z.string().min(1, 'Company name is required'),
   address: z.string().optional(),
   phone: z.string().optional(),
+  additional_phones: z.array(z.string()).default([]),
   email: z.string().email('Invalid email address').or(z.literal('')),
   tax_id: z.string().optional(),
   currency: z.string().min(1, 'Currency is required'),

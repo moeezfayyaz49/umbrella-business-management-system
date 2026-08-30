@@ -22,7 +22,6 @@
     padding: 0 !important;
   }
 
-  /* Collapse app shell so content uses full page width */
   #root > .MuiBox-root {
     display: block !important;
     min-height: 0 !important;
@@ -38,8 +37,15 @@
     flex-grow: 0 !important;
   }
 
-  /* Force light surfaces and readable text regardless of app theme */
-  .MuiPaper-root,
+  .print-area,
+  .MuiPaper-root {
+    background-color: #fff !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    border-color: #ccc !important;
+    min-height: 0 !important;
+  }
+
   .MuiTableContainer-root,
   .MuiTable-root,
   .MuiTableCell-root,
@@ -64,8 +70,15 @@
 
   .MuiTableHead-root {
     background-color: #f0f0f0 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+  }
+
+  .MuiTableHead-root .MuiTableCell-root {
+    background-color: #f0f0f0 !important;
+    font-weight: 700 !important;
+  }
+
+  .MuiTableCell-root {
+    padding: 8px 10px !important;
   }
 
   * {
@@ -77,7 +90,6 @@
     margin: 12mm;
   }
 
-  /* Never append link URLs in printed bills */
   a[href]::after {
     content: none !important;
   }

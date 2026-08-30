@@ -3,6 +3,7 @@ import dayjs from 'dayjs';
 import { useParams, Link } from 'react-router-dom';
 import { useInvoice } from '../hooks/useInvoice';
 import { useSettings } from '../../settings/hooks/useSettings';
+import { formatCompanyPhones } from '../../settings/types';
 import { useClient } from '../../clients/hooks/useClient';
 import { formatCurrency } from '../../../utils/currency';
 
@@ -30,7 +31,7 @@ export const InvoiceView = () => {
           <Typography variant="h4" color="primary" sx={{ fontWeight: 'bold' }}>{settings?.company_name || 'Business Name'}</Typography>
           <Typography variant="body2" color="text.secondary">
             {settings?.address || '123 Business Street, City, Country'}<br />
-            {settings?.email || 'contact@business.com'} • {settings?.phone || '+1 234 567 890'}<br />
+            {settings?.email || 'contact@business.com'} • {formatCompanyPhones(settings, '+1 234 567 890')}<br />
             {settings?.tax_id && `Tax ID: ${settings.tax_id}`}
           </Typography>
         </Box>
