@@ -19,6 +19,7 @@ CREATE TABLE public.company_settings (
   company_name TEXT NOT NULL,
   address TEXT NOT NULL,
   phone TEXT NOT NULL,
+  additional_phones TEXT[] DEFAULT '{}',
   email TEXT NOT NULL,
   tax_id TEXT NOT NULL,
   currency TEXT NOT NULL DEFAULT 'USD',

@@ -1,6 +1,7 @@
 import { 
   Box, Typography, Paper, TextField, Button,
-  FormControl, InputLabel, Select, MenuItem, Divider 
+  FormControl, InputLabel, Select, MenuItem, Divider,
+  Stack, IconButton
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,6 +10,8 @@ import type { SettingsFormInputs } from '../schemas';
 import type { CompanySettings } from '../types';
 import SaveIcon from '@mui/icons-material/Save';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { settingsService } from '../services/settingsService';
 import { useState } from 'react';
 
@@ -22,6 +25,8 @@ export const SettingsForm = ({ initialData, onSubmit, isSubmitting }: Props) => 
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<SettingsFormInputs>({
     resolver: zodResolver(settingsSchema),
@@ -29,6 +34,7 @@ export const SettingsForm = ({ initialData, onSubmit, isSubmitting }: Props) => 
       company_name: initialData.company_name,
       address: initialData.address || '',
       phone: initialData.phone || '',
+      additional_phones: initialData.additional_phones || [],
       email: initialData.email || '',
       tax_id: initialData.tax_id || '',
       currency: initialData.currency || 'PKR',
@@ -40,6 +46,7 @@ export const SettingsForm = ({ initialData, onSubmit, isSubmitting }: Props) => 
 
   const [isUploading, setIsUploading] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | undefined>(initialData.company_logo_url);
+  const additionalPhones = watch('additional_phones') || [];
 
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -130,13 +137,50 @@ export const SettingsForm = ({ initialData, onSubmit, isSubmitting }: Props) => 
             helperText={errors.email?.message}
             fullWidth
           />
-          <TextField
-            label="Phone Number"
-            {...register('phone')}
-            error={!!errors.phone}
-            helperText={errors.phone?.message}
-            fullWidth
-          />
+          <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary">Phone Numbers</Typography>
+              <Button
+                startIcon={<AddIcon />}
+                onClick={() => setValue('additional_phones', [...additionalPhones, ''])}
+                size="small"
+              >
+                Add Phone
+              </Button>
+            </Box>
+            <TextField
+              label="Primary Phone"
+              {...register('phone')}
+              error={!!errors.phone}
+              helperText={errors.phone?.message}
+              fullWidth
+              size="small"
+              sx={{ mb: additionalPhones.length > 0 ? 1 : 0 }}
+            />
+            {additionalPhones.map((_, index) => (
+              <Stack direction="row" spacing={1} key={index} sx={{ mb: 1 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label={`Phone ${index + 2}`}
+                  {...register(`additional_phones.${index}` as const)}
+                  error={!!errors.additional_phones?.[index]}
+                  helperText={errors.additional_phones?.[index]?.message}
+                />
+                <IconButton
+                  color="error"
+                  onClick={() =>
+                    setValue(
+                      'additional_phones',
+                      additionalPhones.filter((_, i) => i !== index)
+                    )
+                  }
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Stack>
+            ))}
+          </Box>
           <TextField
             label="Business Address"
             multiline

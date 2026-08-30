@@ -3,6 +3,7 @@ import dayjs from 'dayjs';
 import type { Purchase } from '../types';
 import { useVendor } from '../../vendors/hooks/useVendor';
 import { useSettings } from '../../settings/hooks/useSettings';
+import { formatCompanyPhones } from '../../settings/types';
 import { formatCurrency } from '../../../utils/currency';
 
 export const PurchaseView = ({ purchase }: { purchase: Purchase }) => {
@@ -18,7 +19,7 @@ export const PurchaseView = ({ purchase }: { purchase: Purchase }) => {
         </Box>
         <Box sx={{ textAlign: 'right' }}>
           <Typography variant="h6">{settings?.company_name}</Typography>
-          <Typography variant="body2">{settings?.phone}</Typography>
+          <Typography variant="body2">{formatCompanyPhones(settings)}</Typography>
           <Typography variant="body2">{settings?.email}</Typography>
           <Typography variant="body2">{settings?.address}</Typography>
         </Box>

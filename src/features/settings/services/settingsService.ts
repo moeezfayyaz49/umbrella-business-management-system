@@ -6,6 +6,7 @@ const defaultSettings: Omit<CompanySettings, 'id' | 'updated_at'> = {
   company_name: 'My Company',
   address: '123 Default St',
   phone: '000-000-0000',
+  additional_phones: [],
   email: 'admin@example.com',
   tax_id: 'TAX-123',
   currency: 'USD',
@@ -42,10 +43,15 @@ export const settingsService = {
     // We only have one settings row, so get its ID first
     const current = await settingsService.getSettings();
 
+    const additional_phones = (data.additional_phones ?? [])
+      .map((p) => p.trim())
+      .filter(Boolean);
+
     const { data: updatedData, error } = await supabase
       .from('company_settings')
       .update({
         ...data,
+        additional_phones,
         updated_at: new Date().toISOString(),
       })
       .eq('id', current.id)
