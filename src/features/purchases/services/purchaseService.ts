@@ -1,10 +1,10 @@
 import type { Purchase } from '../types';
 import type { PurchaseFormInputs } from '../schemas';
 import { supabase } from '../../../lib/supabase';
-import { calculatePurchaseLineTotal } from '../utils/lineTotal';
+import { calculateLineTotal } from '../../../utils/lineTotal';
 
 const calculateTotals = (data: PurchaseFormInputs) => {
-  const subtotal = data.items.reduce((acc, item) => acc + calculatePurchaseLineTotal(item), 0);
+  const subtotal = data.items.reduce((acc, item) => acc + calculateLineTotal(item), 0);
   const afterDiscount = subtotal - data.discount;
   const taxAmount = afterDiscount * (data.tax_rate / 100);
   const total_amount = afterDiscount + taxAmount;
@@ -147,7 +147,7 @@ export const purchaseService = {
         description: item.description,
         quantity: item.quantity,
         unit_price: item.unit_price,
-        total: calculatePurchaseLineTotal(item),
+        total: calculateLineTotal(item),
         unit: item.unit || 'Piece',
         weight: item.weight || null,
         weight_unit: item.weight_unit || null,
@@ -232,7 +232,7 @@ export const purchaseService = {
         description: item.description,
         quantity: item.quantity,
         unit_price: item.unit_price,
-        total: calculatePurchaseLineTotal(item),
+        total: calculateLineTotal(item),
         unit: item.unit || 'Piece',
         weight: item.weight || null,
         weight_unit: item.weight_unit || null,

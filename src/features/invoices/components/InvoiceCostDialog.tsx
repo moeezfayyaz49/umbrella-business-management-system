@@ -12,6 +12,7 @@ const schema = z.object({
       description: z.string(),
       quantity: z.number(),
       unit_price: z.number(),
+      total: z.number(),
       cost: z.number().min(0, 'Cost cannot be negative'),
     })
   ),
@@ -54,6 +55,7 @@ export const InvoiceCostDialog = ({ open, onClose, onSubmit, invoice, isSubmitti
           quantity: item.quantity,
           unit_price: item.unit_price,
           cost: item.cost || 0,
+          total: item.total,
         })),
       });
     }
@@ -87,7 +89,7 @@ export const InvoiceCostDialog = ({ open, onClose, onSubmit, invoice, isSubmitti
                     <TableCell>{field.description}</TableCell>
                     <TableCell align="right">{field.quantity}</TableCell>
                     <TableCell align="right">{field.unit_price}</TableCell>
-                    <TableCell align="right">{field.quantity * field.unit_price}</TableCell>
+                    <TableCell align="right">{field.total}</TableCell>
                     <TableCell align="right">
                       <Controller
                         name={`items.${index}.cost`}

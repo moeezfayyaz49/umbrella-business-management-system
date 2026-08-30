@@ -1,7 +1,8 @@
 import {
   Box, Button, TextField, Typography, Paper,
   IconButton, Divider, Select, MenuItem, FormControl, InputLabel,
-  Accordion, AccordionSummary, AccordionDetails, Autocomplete, Tooltip
+  Accordion, AccordionSummary, AccordionDetails, Autocomplete, Tooltip,
+  ToggleButton, ToggleButtonGroup
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -15,6 +16,7 @@ import { useEffect } from 'react';
 import type { Invoice } from '../types';
 import { useClients } from '../../clients/hooks/useClients';
 import dayjs from 'dayjs';
+import { calculateLineTotal } from '../../../utils/lineTotal';
 import { useSettings } from '../../settings/hooks/useSettings';
 import { formatCurrency } from '../../../utils/currency';
 
@@ -34,6 +36,7 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<InvoiceFormInputs>({
     resolver: zodResolver(invoiceSchema),
@@ -53,7 +56,7 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
       transport_charges: 0,
       transport_paid_by: 'Client',
       transport_remarks: '',
-      items: [{ description: '', quantity: 1, unit_price: 0, unit: 'Piece' }],
+      items: [{ description: '', quantity: 1, unit_price: 0, unit: 'Piece', pricing_mode: 'quantity' }],
     },
   });
 
@@ -88,6 +91,7 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
       weight: item.weight ?? undefined,
       weight_unit: item.weight_unit ?? '',
       color: item.color ?? '',
+      pricing_mode: item.pricing_mode || 'quantity',
     });
   };
 
@@ -116,13 +120,13 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
           weight: i.weight ?? undefined,
           weight_unit: i.weight_unit ?? '',
           color: i.color ?? '',
+          pricing_mode: i.pricing_mode || 'quantity',
         })),
       });
     }
   }, [initialData, reset]);
 
-  // Calculate Subtotal dynamically
-  const subtotal = watchItems?.reduce((acc, item) => acc + ((item.quantity || 0) * (item.unit_price || 0)), 0) || 0;
+  const subtotal = watchItems?.reduce((acc, item) => acc + calculateLineTotal(item), 0) || 0;
   const total = subtotal - (watchDiscount || 0) + ((subtotal - (watchDiscount || 0)) * (watchTaxRate || 0) / 100);
 
   return (
@@ -236,9 +240,42 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
 
       <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>Line Items</Typography>
-        
-        {fields.map((field, index) => (
+
+        {fields.map((field, index) => {
+          const pricingMode = watchItems?.[index]?.pricing_mode || 'quantity';
+          const weightUnit = watchItems?.[index]?.weight_unit || 'kg';
+          const lineTotal = calculateLineTotal(watchItems?.[index] || {});
+
+          return (
           <Box key={field.id} sx={{ mb: 4, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2, flexWrap: 'wrap' }}>
+              <Controller
+                name={`items.${index}.pricing_mode`}
+                control={control}
+                render={({ field: modeField }) => (
+                  <ToggleButtonGroup
+                    exclusive
+                    size="small"
+                    value={modeField.value || 'quantity'}
+                    onChange={(_, value) => {
+                      if (!value) return;
+                      modeField.onChange(value);
+                      if (value === 'weight' && !watchItems?.[index]?.weight_unit) {
+                        setValue(`items.${index}.weight_unit`, 'kg');
+                      }
+                    }}
+                  >
+                    <ToggleButton value="quantity">Price by Qty</ToggleButton>
+                    <ToggleButton value="weight">Price by Weight</ToggleButton>
+                  </ToggleButtonGroup>
+                )}
+              />
+              {pricingMode === 'weight' && (
+                <Typography variant="caption" color="text.secondary">
+                  Total = total weight × price per {weightUnit}
+                </Typography>
+              )}
+            </Box>
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', mb: 2, flexWrap: 'wrap' }}>
               <TextField
                 sx={{ flexGrow: 1, minWidth: 200 }}
@@ -269,7 +306,7 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
               />
               <TextField
                 sx={{ width: 150 }}
-                label="Unit Price"
+                label={pricingMode === 'weight' ? `Price / ${weightUnit}` : 'Unit Price'}
                 type="number"
                 slotProps={{ htmlInput: { step: 'any', inputMode: 'decimal', min: 0 } }}
                 {...register(`items.${index}.unit_price`, {
@@ -280,7 +317,7 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
               />
               <Box sx={{ minWidth: 100, textAlign: 'right', display: 'flex', alignItems: 'center', height: '56px' }}>
                 <Typography variant="subtitle1">
-                  {formatCurrency((watchItems?.[index]?.quantity || 0) * (watchItems?.[index]?.unit_price || 0), settings?.currency)}
+                  {formatCurrency(lineTotal, settings?.currency)}
                 </Typography>
               </Box>
               <Tooltip title="Copy item">
@@ -295,24 +332,32 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexWrap: 'wrap' }}>
               <TextField
                 sx={{ width: 150 }}
-                label="Weight (Optional)"
+                label={pricingMode === 'weight' ? 'Total Weight' : 'Weight (Optional)'}
                 type="number"
+                required={pricingMode === 'weight'}
                 slotProps={{ htmlInput: { step: 'any' } }}
                 {...register(`items.${index}.weight`, { setValueAs: v => v === '' ? undefined : Number(v) })}
                 error={!!errors.items?.[index]?.weight}
+                helperText={errors.items?.[index]?.weight?.message}
               />
-              <FormControl sx={{ width: 150 }}>
+              <FormControl sx={{ width: 150 }} error={!!errors.items?.[index]?.weight_unit}>
                 <InputLabel>Weight Unit</InputLabel>
-                <Select
-                  label="Weight Unit"
-                  {...register(`items.${index}.weight_unit`)}
-                  defaultValue={initialData?.items[index]?.weight_unit || ''}
-                >
-                  <MenuItem value=""><em>None</em></MenuItem>
-                  {['g', 'kg', 'mg', 'lb', 'oz', 'ton'].map(u => (
-                    <MenuItem key={u} value={u}>{u}</MenuItem>
-                  ))}
-                </Select>
+                <Controller
+                  name={`items.${index}.weight_unit`}
+                  control={control}
+                  render={({ field: wuField }) => (
+                    <Select
+                      label="Weight Unit"
+                      value={wuField.value || ''}
+                      onChange={wuField.onChange}
+                    >
+                      <MenuItem value=""><em>None</em></MenuItem>
+                      {['g', 'kg', 'mg', 'lb', 'oz', 'ton'].map(u => (
+                        <MenuItem key={u} value={u}>{u}</MenuItem>
+                      ))}
+                    </Select>
+                  )}
+                />
               </FormControl>
               <TextField
                 sx={{ width: 200 }}
@@ -323,9 +368,10 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
               />
             </Box>
           </Box>
-        ))}
-        
-        <Button startIcon={<AddIcon />} onClick={() => append({ description: '', quantity: 1, unit_price: 0, unit: 'Piece' })}>
+          );
+        })}
+
+        <Button startIcon={<AddIcon />} onClick={() => append({ description: '', quantity: 1, unit_price: 0, unit: 'Piece', pricing_mode: 'quantity' })}>
           Add Item
         </Button>
 

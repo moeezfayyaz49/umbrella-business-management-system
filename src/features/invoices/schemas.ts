@@ -10,6 +10,25 @@ export const invoiceItemSchema = z.object({
   weight: z.number().optional().or(z.literal('')),
   weight_unit: z.string().optional().or(z.literal('')),
   color: z.string().optional(),
+  pricing_mode: z.enum(['quantity', 'weight']).default('quantity'),
+}).superRefine((item, ctx) => {
+  if (item.pricing_mode === 'weight') {
+    const weight = typeof item.weight === 'number' ? item.weight : Number(item.weight);
+    if (!weight || weight <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Total weight is required when pricing by weight',
+        path: ['weight'],
+      });
+    }
+    if (!item.weight_unit) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Weight unit is required when pricing by weight',
+        path: ['weight_unit'],
+      });
+    }
+  }
 });
 
 export const invoiceSchema = z.object({

@@ -18,7 +18,7 @@ import { useVendors } from '../../vendors/hooks/useVendors';
 import dayjs from 'dayjs';
 import { useSettings } from '../../settings/hooks/useSettings';
 import { formatCurrency } from '../../../utils/currency';
-import { calculatePurchaseLineTotal } from '../utils/lineTotal';
+import { calculateLineTotal } from '../../../utils/lineTotal';
 
 interface Props {
   initialData?: Purchase;
@@ -113,7 +113,7 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
     }
   }, [initialData, reset]);
 
-  const subtotal = watchItems?.reduce((acc, item) => acc + calculatePurchaseLineTotal(item), 0) || 0;
+  const subtotal = watchItems?.reduce((acc, item) => acc + calculateLineTotal(item), 0) || 0;
   const total = subtotal - (watchDiscount || 0) + ((subtotal - (watchDiscount || 0)) * (watchTaxRate || 0) / 100);
 
   return (
@@ -236,7 +236,7 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
         {fields.map((field, index) => {
           const pricingMode = watchItems?.[index]?.pricing_mode || 'quantity';
           const weightUnit = watchItems?.[index]?.weight_unit || 'kg';
-          const lineTotal = calculatePurchaseLineTotal(watchItems?.[index] || {});
+          const lineTotal = calculateLineTotal(watchItems?.[index] || {});
 
           return (
             <Box key={field.id} sx={{ mb: 4, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
