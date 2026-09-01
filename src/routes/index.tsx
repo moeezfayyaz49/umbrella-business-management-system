@@ -18,6 +18,7 @@ import { EditPurchase } from '../pages/purchases/EditPurchase';
 import { PurchaseDetails } from '../pages/purchases/PurchaseDetails';
 import { Expenses } from '../pages/expenses/Expenses';
 import { Cashbook } from '../pages/cashbook/Cashbook';
+import { DailyRecords } from '../pages/daily-records/DailyRecords';
 import { Reports } from '../pages/reports/Reports';
 import { Settings } from '../pages/settings/Settings';
 
@@ -89,6 +90,10 @@ export const router = createBrowserRouter([
           {
             path: 'cashbook',
             element: <Cashbook />,
+          },
+          {
+            path: 'daily-records',
+            element: <DailyRecords />,
           },
           {
             path: 'reports',

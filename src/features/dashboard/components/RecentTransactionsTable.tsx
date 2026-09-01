@@ -13,8 +13,7 @@ import {
 } from '@mui/material';
 import dayjs from 'dayjs';
 import type { RecentTransaction } from '../types';
-import { useSettings } from '../../settings/hooks/useSettings';
-import { formatCurrency } from '../../../utils/currency';
+import { useSensitiveCurrency } from '../../../hooks/useSensitiveCurrency';
 
 interface Props {
   transactions?: RecentTransaction[];
@@ -39,7 +38,7 @@ const formatType = (type: string) => {
 };
 
 export const RecentTransactionsTable = ({ transactions, isLoading }: Props) => {
-  const { data: settings } = useSettings();
+  const { formatSensitiveCurrency } = useSensitiveCurrency();
   return (
     <TableContainer component={Paper} elevation={2}>
       <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
@@ -80,7 +79,7 @@ export const RecentTransactionsTable = ({ transactions, isLoading }: Props) => {
                   />
                 </TableCell>
                 <TableCell align="right">
-                  {formatCurrency(row.amount, settings?.currency)}
+                  {formatSensitiveCurrency(row.amount)}
                 </TableCell>
               </TableRow>
             ))

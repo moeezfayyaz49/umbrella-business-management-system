@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Card, CardContent, Typography, Box, CircularProgress, MenuItem, Select } from '@mui/material';
-import { useSettings } from '../../settings/hooks/useSettings';
-import { formatCurrency } from '../../../utils/currency';
+import { useSensitiveCurrency } from '../../../hooks/useSensitiveCurrency';
 import dayjs from 'dayjs';
 
 interface Props {
@@ -11,7 +10,7 @@ interface Props {
 }
 
 export const DashboardMetricCardWithPeriod = ({ title, color = 'primary.main', fetchData }: Props) => {
-  const { data: settings } = useSettings();
+  const { formatSensitiveCurrency } = useSensitiveCurrency();
   const currentMonth = dayjs().month() + 1; // dayjs month is 0-indexed
   const currentYear = dayjs().year();
 
@@ -71,7 +70,7 @@ export const DashboardMetricCardWithPeriod = ({ title, color = 'primary.main', f
           </Box>
         ) : (
           <Typography variant="h4" component="div" sx={{ color, fontWeight: 'bold' }}>
-            {value !== undefined ? formatCurrency(value, settings?.currency) : '-'}
+            {value !== undefined ? formatSensitiveCurrency(value) : '-'}
           </Typography>
         )}
       </CardContent>
