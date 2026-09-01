@@ -8,6 +8,7 @@ import { NetBusinessWorthSummary } from '../../features/reports/components/NetBu
 import { NetBusinessWorthChart } from '../../features/reports/components/NetBusinessWorthChart';
 import { CashFlowChart } from '../../features/reports/components/CashFlowChart';
 import { ExpenseBreakdownChart } from '../../features/reports/components/ExpenseBreakdownChart';
+import { PrivacyToggle } from '../../components/PrivacyToggle';
 import {
   ReportPeriodFilter,
   getReportDateRange,
@@ -42,12 +43,15 @@ export const Reports = () => {
             Showing data for {getReportPeriodLabel(periodMode, selectedMonth)}
           </Typography>
         </Box>
-        <ReportPeriodFilter
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <PrivacyToggle />
+          <ReportPeriodFilter
           mode={periodMode}
           selectedMonth={selectedMonth}
           onModeChange={setPeriodMode}
           onMonthChange={setSelectedMonth}
         />
+        </Box>
       </Box>
 
       {isNetWorthLoading ? (

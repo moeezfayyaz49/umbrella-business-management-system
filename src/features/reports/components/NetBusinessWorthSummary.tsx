@@ -1,7 +1,6 @@
 import { Alert, Box, Paper, Typography } from '@mui/material';
 import dayjs from 'dayjs';
-import { useSettings } from '../../settings/hooks/useSettings';
-import { formatCurrency } from '../../../utils/currency';
+import { useSensitiveCurrency } from '../../../hooks/useSensitiveCurrency';
 import type { NetBusinessWorthBreakdown } from '../services/netBusinessWorthService';
 
 interface Props {
@@ -10,8 +9,7 @@ interface Props {
 }
 
 export const NetBusinessWorthSummary = ({ breakdown, periodLabel }: Props) => {
-  const { data: settings } = useSettings();
-  const currency = settings?.currency;
+  const { formatSensitiveCurrency } = useSensitiveCurrency();
   const isPositive = breakdown.netBusinessWorth >= 0;
 
   return (
@@ -44,21 +42,21 @@ export const NetBusinessWorthSummary = ({ breakdown, periodLabel }: Props) => {
           <Typography color="text.secondary" variant="body2" gutterBottom>
             Total Cash
           </Typography>
-          <Typography variant="h5">{formatCurrency(breakdown.totalCash, currency)}</Typography>
+          <Typography variant="h5">{formatSensitiveCurrency(breakdown.totalCash)}</Typography>
         </Paper>
 
         <Paper elevation={2} sx={{ p: 2.5, borderTop: '4px solid #9c27b0' }}>
           <Typography color="text.secondary" variant="body2" gutterBottom>
             Stock (Inventory)
           </Typography>
-          <Typography variant="h5">{formatCurrency(breakdown.stock, currency)}</Typography>
+          <Typography variant="h5">{formatSensitiveCurrency(breakdown.stock)}</Typography>
         </Paper>
 
         <Paper elevation={2} sx={{ p: 2.5, borderTop: '4px solid #4caf50' }}>
           <Typography color="text.secondary" variant="body2" gutterBottom>
             Total Receivables
           </Typography>
-          <Typography variant="h5">{formatCurrency(breakdown.receivables, currency)}</Typography>
+          <Typography variant="h5">{formatSensitiveCurrency(breakdown.receivables)}</Typography>
         </Paper>
 
         <Paper elevation={2} sx={{ p: 2.5, borderTop: '4px solid #f44336' }}>
@@ -66,7 +64,7 @@ export const NetBusinessWorthSummary = ({ breakdown, periodLabel }: Props) => {
             Vendor Payables
           </Typography>
           <Typography variant="h5" color="error.main">
-            −{formatCurrency(breakdown.vendorPayables, currency)}
+            −{formatSensitiveCurrency(breakdown.vendorPayables)}
           </Typography>
         </Paper>
 
@@ -78,7 +76,7 @@ export const NetBusinessWorthSummary = ({ breakdown, periodLabel }: Props) => {
             Net Business Worth
           </Typography>
           <Typography variant="h5" color={isPositive ? 'success.main' : 'error.main'}>
-            {formatCurrency(breakdown.netBusinessWorth, currency)}
+            {formatSensitiveCurrency(breakdown.netBusinessWorth)}
           </Typography>
         </Paper>
       </Box>

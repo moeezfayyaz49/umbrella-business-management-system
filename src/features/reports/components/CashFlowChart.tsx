@@ -1,6 +1,5 @@
 import { Paper, Typography, Box } from '@mui/material';
-import { useSettings } from '../../settings/hooks/useSettings';
-import { formatCurrency } from '../../../utils/currency';
+import { useSensitiveCurrency, HIDDEN_AMOUNT } from '../../../hooks/useSensitiveCurrency';
 import {
   ResponsiveContainer,
   BarChart,
@@ -18,7 +17,7 @@ interface Props {
 }
 
 export const CashFlowChart = ({ data, title = 'Monthly Cash Flow' }: Props) => {
-  const { data: settings } = useSettings();
+  const { formatSensitiveCurrency, hideFinancialData } = useSensitiveCurrency();
   return (
     <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
       <Typography variant="h6" gutterBottom>{title}</Typography>
@@ -27,8 +26,8 @@ export const CashFlowChart = ({ data, title = 'Monthly Cash Flow' }: Props) => {
           <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="month" />
-            <YAxis />
-            <Tooltip formatter={(value: any) => {formatCurrency(Number(value), settings?.currency)}} />
+            <YAxis tickFormatter={(value) => (hideFinancialData ? HIDDEN_AMOUNT : formatSensitiveCurrency(Number(value)))} />
+            <Tooltip formatter={(value) => formatSensitiveCurrency(Number(value))} />
             <Legend />
             <Bar dataKey="income" name="Income" fill="#4caf50" radius={[4, 4, 0, 0]} />
             <Bar dataKey="outflow" name="Outflow" fill="#f44336" radius={[4, 4, 0, 0]} />

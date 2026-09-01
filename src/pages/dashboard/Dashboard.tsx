@@ -1,19 +1,18 @@
 import { Box, Typography } from '@mui/material';
+import { PrivacyToggle } from '../../components/PrivacyToggle';
 import { DashboardMetricCard } from '../../features/dashboard/components/DashboardMetricCard';
 import { DashboardMetricCardWithPeriod } from '../../features/dashboard/components/DashboardMetricCardWithPeriod';
-import { RecentTransactionsTable } from '../../features/dashboard/components/RecentTransactionsTable';
 import { useDashboardMetrics, useClientReceivables, useVendorPayables, useTotalProfit, useTotalExpense } from '../../features/dashboard/hooks/useDashboardMetrics';
-import { useRecentTransactions } from '../../features/dashboard/hooks/useRecentTransactions';
 
 export const Dashboard = () => {
   const { data: metrics, isLoading: isMetricsLoading } = useDashboardMetrics();
-  const { data: transactions, isLoading: isTransactionsLoading } = useRecentTransactions();
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Dashboard
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+        <Typography variant="h4">Dashboard</Typography>
+        <PrivacyToggle />
+      </Box>
       
       <Box sx={{ 
         display: 'grid', 
@@ -27,14 +26,6 @@ export const Dashboard = () => {
             value={metrics?.todaysSales}
             isLoading={isMetricsLoading}
             color="success.main"
-          />
-        </Box>
-        <Box>
-          <DashboardMetricCard
-            title="Today's Expenses"
-            value={metrics?.todaysExpenses}
-            isLoading={isMetricsLoading}
-            color="error.main"
           />
         </Box>
         <Box>
@@ -73,13 +64,6 @@ export const Dashboard = () => {
             color="error.dark"
           />
         </Box>
-      </Box>
-
-      <Box>
-        <RecentTransactionsTable
-          transactions={transactions}
-          isLoading={isTransactionsLoading}
-        />
       </Box>
     </Box>
   );

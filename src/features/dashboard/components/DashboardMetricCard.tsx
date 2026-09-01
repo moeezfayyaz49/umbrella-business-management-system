@@ -1,6 +1,5 @@
 import { Card, CardContent, Typography, Box, CircularProgress } from '@mui/material';
-import { useSettings } from '../../settings/hooks/useSettings';
-import { formatCurrency } from '../../../utils/currency';
+import { useSensitiveCurrency } from '../../../hooks/useSensitiveCurrency';
 
 interface Props {
   title: string;
@@ -11,7 +10,7 @@ interface Props {
 }
 
 export const DashboardMetricCard = ({ title, value, isLoading, isCurrency = true, color = 'primary.main' }: Props) => {
-  const { data: settings } = useSettings();
+  const { formatSensitiveCurrency } = useSensitiveCurrency();
   return (
     <Card elevation={2}>
       <CardContent>
@@ -25,7 +24,7 @@ export const DashboardMetricCard = ({ title, value, isLoading, isCurrency = true
         ) : (
           <Typography variant="h4" component="div" sx={{ color, fontWeight: 'bold' }}>
             {isCurrency && value !== undefined
-              ? formatCurrency(value, settings?.currency)
+              ? formatSensitiveCurrency(value)
               : value?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </Typography>
         )}
