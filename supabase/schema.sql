@@ -158,6 +158,48 @@ CREATE TABLE public.cashbook_transactions (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
+-- Bank Accounts
+CREATE TABLE public.bank_accounts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  account_number TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Daily Records (bank-wise balances + stock on date)
+CREATE TABLE public.daily_records (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  record_date DATE NOT NULL UNIQUE,
+  total_stock NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Bank Balances per Daily Record
+CREATE TABLE public.bank_balances (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  daily_record_id UUID NOT NULL REFERENCES public.daily_records(id) ON DELETE CASCADE,
+  bank_account_id UUID NOT NULL REFERENCES public.bank_accounts(id) ON DELETE CASCADE,
+  balance NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  credit_card_balance NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  UNIQUE (daily_record_id, bank_account_id)
+);
+
+-- Stock Items per Daily Record
+CREATE TABLE public.stock_items (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  daily_record_id UUID NOT NULL REFERENCES public.daily_records(id) ON DELETE CASCADE,
+  description TEXT NOT NULL,
+  pieces NUMERIC(10, 2) NOT NULL,
+  price_per_piece NUMERIC(10, 2) NOT NULL,
+  total NUMERIC(12, 2) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
 -- Set up Row Level Security (RLS)
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.company_settings ENABLE ROW LEVEL SECURITY;
@@ -172,6 +214,10 @@ ALTER TABLE public.purchase_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expense_categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cashbook_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bank_accounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.daily_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bank_balances ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.stock_items ENABLE ROW LEVEL SECURITY;
 
 -- --------------------------------------------------------
 -- Create RLS Policies
@@ -218,6 +264,18 @@ CREATE POLICY "Enable all access for authenticated users" ON public.expenses FOR
 
 -- Cashbook Transactions
 CREATE POLICY "Enable all access for authenticated users" ON public.cashbook_transactions FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- Bank Accounts
+CREATE POLICY "Enable all access for authenticated users" ON public.bank_accounts FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- Daily Records
+CREATE POLICY "Enable all access for authenticated users" ON public.daily_records FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- Bank Balances
+CREATE POLICY "Enable all access for authenticated users" ON public.bank_balances FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- Stock Items
+CREATE POLICY "Enable all access for authenticated users" ON public.stock_items FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
 
 -- Function to handle new user signups
 CREATE OR REPLACE FUNCTION public.handle_new_user() 

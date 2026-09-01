@@ -6,6 +6,7 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -26,6 +27,7 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
     { path: '/purchases', label: 'Purchases', icon: <ShoppingCartIcon /> },
     { path: '/expenses', label: 'Expenses', icon: <AccountBalanceWalletIcon /> },
     { path: '/cashbook', label: 'Cash Book', icon: <AccountBalanceIcon /> },
+    { path: '/daily-records', label: 'Daily Records', icon: <CalendarMonthIcon /> },
     { path: '/reports', label: 'Reports', icon: <BarChartIcon /> },
     { path: '/settings', label: 'Settings', icon: <SettingsIcon /> },
   ];
