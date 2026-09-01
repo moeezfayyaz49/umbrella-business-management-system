@@ -2,7 +2,10 @@ import { Box, Typography, CircularProgress } from '@mui/material';
 import { useState } from 'react';
 import dayjs from 'dayjs';
 import { useReportData } from '../../features/reports/hooks/useReportData';
+import { useNetBusinessWorth } from '../../features/reports/hooks/useNetBusinessWorth';
 import { ProfitLossSummary } from '../../features/reports/components/ProfitLossSummary';
+import { NetBusinessWorthSummary } from '../../features/reports/components/NetBusinessWorthSummary';
+import { NetBusinessWorthChart } from '../../features/reports/components/NetBusinessWorthChart';
 import { CashFlowChart } from '../../features/reports/components/CashFlowChart';
 import { ExpenseBreakdownChart } from '../../features/reports/components/ExpenseBreakdownChart';
 import {
@@ -14,10 +17,11 @@ import {
 } from '../../features/reports/components/ReportPeriodFilter';
 
 export const Reports = () => {
-  const [periodMode, setPeriodMode] = useState<ReportPeriodMode>('all');
+  const [periodMode, setPeriodMode] = useState<ReportPeriodMode>('month');
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
   const { startDate, endDate } = getReportDateRange(periodMode, selectedMonth);
   const { data, isLoading } = useReportData(startDate, endDate);
+  const { data: netWorthData, isLoading: isNetWorthLoading } = useNetBusinessWorth(periodMode, selectedMonth);
 
   if (isLoading) {
     return (
@@ -45,6 +49,19 @@ export const Reports = () => {
           onMonthChange={setSelectedMonth}
         />
       </Box>
+
+      {isNetWorthLoading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4, mb: 4 }}>
+          <CircularProgress size={32} />
+        </Box>
+      ) : netWorthData?.mode === 'month' && netWorthData.breakdown ? (
+        <NetBusinessWorthSummary
+          breakdown={netWorthData.breakdown}
+          periodLabel={`As of ${selectedMonth.format('MMMM YYYY')} month-end`}
+        />
+      ) : netWorthData?.mode === 'all' && netWorthData.monthlyTrend?.length ? (
+        <NetBusinessWorthChart data={netWorthData.monthlyTrend} />
+      ) : null}
 
       <ProfitLossSummary summary={data.summary} />
 

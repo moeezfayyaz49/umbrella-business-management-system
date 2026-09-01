@@ -75,6 +75,19 @@ export const dailyRecordService = {
     return (data || []).map(mapDailyRecord);
   },
 
+  getDailyRecordAsOfDate: async (asOfDate: string): Promise<DailyRecord | null> => {
+    const { data, error } = await supabase
+      .from('daily_records')
+      .select(dailyRecordSelect)
+      .lte('record_date', asOfDate)
+      .order('record_date', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data ? mapDailyRecord(data) : null;
+  },
+
   getDailyRecord: async (id: string): Promise<DailyRecord> => {
     const { data, error } = await supabase
       .from('daily_records')
