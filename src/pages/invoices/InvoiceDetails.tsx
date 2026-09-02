@@ -2,6 +2,7 @@ import { Box, Button, CircularProgress } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PrintIcon from '@mui/icons-material/Print';
 import ImageIcon from '@mui/icons-material/Image';
+import UndoIcon from '@mui/icons-material/Undo';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState } from 'react';
 import { InvoiceView } from '../../features/invoices/components/InvoiceView';
@@ -43,6 +44,14 @@ export const InvoiceDetails = () => {
           Back to Invoices
         </Button>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <Button
+            variant="outlined"
+            color="warning"
+            startIcon={<UndoIcon />}
+            onClick={() => navigate(`/returns/client/new?invoiceId=${id}`)}
+          >
+            Client Return
+          </Button>
           <Button
             variant="outlined"
             startIcon={<ImageIcon />}

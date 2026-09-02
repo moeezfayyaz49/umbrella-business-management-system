@@ -3,13 +3,14 @@ import { z } from 'zod';
 export const purchaseItemSchema = z.object({
   id: z.string().optional(),
   description: z.string().min(1, 'Description is required'),
-  quantity: z.number().min(1, 'Quantity must be at least 1'),
+  quantity: z.number().min(0.0001, 'Quantity must be greater than 0'),
   unit_price: z.number().min(0, 'Unit price cannot be negative'),
   unit: z.string(),
   weight: z.number().optional().or(z.literal('')),
   weight_unit: z.string().optional().or(z.literal('')),
   color: z.string().optional(),
   pricing_mode: z.enum(['quantity', 'weight']),
+  inventory_item_id: z.string().optional().nullable(),
 }).superRefine((item, ctx) => {
   if (item.pricing_mode === 'weight') {
     const weight = typeof item.weight === 'number' ? item.weight : Number(item.weight);

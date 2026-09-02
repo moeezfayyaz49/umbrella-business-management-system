@@ -2,7 +2,7 @@ import {
   Box, Button, TextField, Typography, Paper,
   IconButton, Divider, Select, MenuItem, FormControl, InputLabel,
   Accordion, AccordionSummary, AccordionDetails, Autocomplete, Tooltip,
-  ToggleButton, ToggleButtonGroup
+  ToggleButton, ToggleButtonGroup, Chip
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -15,6 +15,8 @@ import type { PurchaseFormInputs } from '../schemas';
 import { useEffect } from 'react';
 import type { Purchase } from '../types';
 import { useVendors } from '../../vendors/hooks/useVendors';
+import { useAllStock } from '../../inventory/hooks/useInventory';
+import type { InventoryItem } from '../../inventory/types';
 import dayjs from 'dayjs';
 import { useSettings } from '../../settings/hooks/useSettings';
 import { formatCurrency } from '../../../utils/currency';
@@ -29,6 +31,7 @@ interface Props {
 export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
   const { data: settings } = useSettings();
   const { data: vendors, isLoading: isVendorsLoading } = useVendors();
+  const { data: stockItems } = useAllStock();
 
   const {
     register,
@@ -54,7 +57,7 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
       transport_charges: 0,
       transport_paid_by: 'Vendor',
       transport_payment_status: 'Pending',
-      items: [{ description: '', quantity: 1, unit_price: 0, unit: 'Piece', pricing_mode: 'quantity' }],
+      items: [{ description: '', quantity: 1, unit_price: 0, unit: 'Piece', pricing_mode: 'quantity', inventory_item_id: null }],
     },
   });
 
@@ -79,7 +82,24 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
       weight_unit: item.weight_unit ?? '',
       color: item.color ?? '',
       pricing_mode: item.pricing_mode || 'quantity',
+      inventory_item_id: item.inventory_item_id || null,
     });
+  };
+
+  const applyStockItem = (index: number, stockItem: InventoryItem | null) => {
+    if (!stockItem) {
+      setValue(`items.${index}.inventory_item_id`, null);
+      return;
+    }
+    setValue(`items.${index}.inventory_item_id`, stockItem.id);
+    setValue(`items.${index}.description`, stockItem.description);
+    setValue(`items.${index}.unit`, stockItem.unit || 'Piece');
+    setValue(`items.${index}.color`, stockItem.color || '');
+    setValue(`items.${index}.pricing_mode`, stockItem.pricing_mode || 'quantity');
+    setValue(`items.${index}.weight_unit`, stockItem.weight_unit || '');
+    if (stockItem.unit_cost != null) {
+      setValue(`items.${index}.unit_price`, Number(stockItem.unit_cost) || 0);
+    }
   };
 
   useEffect(() => {
@@ -108,6 +128,7 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
           weight_unit: i.weight_unit ?? '',
           color: i.color ?? '',
           pricing_mode: i.pricing_mode || 'quantity',
+          inventory_item_id: null,
         })),
       });
     }
@@ -262,12 +283,35 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
                     </ToggleButtonGroup>
                   )}
                 />
+                {watchItems?.[index]?.inventory_item_id && (
+                  <Chip size="small" color="primary" variant="outlined" label="Adds to existing stock" />
+                )}
                 {pricingMode === 'weight' && (
                   <Typography variant="caption" color="text.secondary">
                     Total = total weight × price per {weightUnit}
                   </Typography>
                 )}
               </Box>
+
+              <Box sx={{ mb: 2 }}>
+                <Autocomplete
+                  options={stockItems || []}
+                  value={(stockItems || []).find((s) => s.id === watchItems?.[index]?.inventory_item_id) || null}
+                  onChange={(_, stockItem) => applyStockItem(index, stockItem)}
+                  getOptionLabel={(option) =>
+                    `${option.description} · left ${option.quantity_remaining}${option.color ? ` · ${option.color}` : ''}`
+                  }
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Add to existing stock item (optional)"
+                      helperText="Select an existing item to increase its quantity, or leave empty for a new stock item."
+                    />
+                  )}
+                />
+              </Box>
+
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', mb: 2, flexWrap: 'wrap' }}>
                 <TextField
                   sx={{ flexGrow: 1, minWidth: 200 }}
@@ -363,7 +407,7 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
           );
         })}
 
-        <Button startIcon={<AddIcon />} onClick={() => append({ description: '', quantity: 1, unit_price: 0, unit: 'Piece', pricing_mode: 'quantity' })}>
+        <Button startIcon={<AddIcon />} onClick={() => append({ description: '', quantity: 1, unit_price: 0, unit: 'Piece', pricing_mode: 'quantity', inventory_item_id: null })}>
           Add Item
         </Button>
 

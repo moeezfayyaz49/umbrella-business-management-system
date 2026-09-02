@@ -10,6 +10,9 @@ export interface InvoiceItem {
   weight_unit?: string;
   color?: string;
   pricing_mode?: 'quantity' | 'weight';
+  inventory_item_id?: string | null;
+  stock_quantity?: number | null;
+  stock_weight?: number | null;
 }
 
 export interface Invoice {

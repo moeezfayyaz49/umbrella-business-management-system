@@ -2,6 +2,7 @@ import type { Purchase } from '../types';
 import type { PurchaseFormInputs } from '../schemas';
 import { supabase } from '../../../lib/supabase';
 import { calculateLineTotal } from '../../../utils/lineTotal';
+import { inventoryService } from '../../inventory/services/inventoryService';
 
 const calculateTotals = (data: PurchaseFormInputs) => {
   const subtotal = data.items.reduce((acc, item) => acc + calculateLineTotal(item), 0);
@@ -140,7 +141,7 @@ export const purchaseService = {
         }]);
     }
 
-    // 2. Insert items
+    // 2. Insert items and create live stock (future purchases only — no backfill)
     if (items && items.length > 0) {
       const itemsToInsert = items.map(item => ({
         purchase_id: newPurchase.id,
@@ -155,11 +156,19 @@ export const purchaseService = {
         pricing_mode: item.pricing_mode || 'quantity',
       }));
 
-      const { error: itemsError } = await supabase
+      const { data: insertedItems, error: itemsError } = await supabase
         .from('purchase_items')
-        .insert(itemsToInsert);
+        .insert(itemsToInsert)
+        .select('id');
 
       if (itemsError) throw itemsError;
+
+      await inventoryService.createFromPurchase(
+        newPurchase.id,
+        purchaseData.vendor_id,
+        items,
+        (insertedItems || []).map((row) => row.id)
+      );
     }
 
     return purchaseService.getPurchase(newPurchase.id);
@@ -168,6 +177,9 @@ export const purchaseService = {
   updatePurchase: async (id: string, data: PurchaseFormInputs): Promise<Purchase> => {
     const { total_amount, remaining_amount } = calculateTotals(data);
     const { items, paid_description, ...purchaseData } = data;
+
+    // Only new purchases track inventory; old ones stay without stock.
+    const tracksInventory = await inventoryService.preparePurchaseStockResync(id);
 
     // 1. Update purchase header
     const { error: updateError } = await supabase
@@ -240,17 +252,29 @@ export const purchaseService = {
         pricing_mode: item.pricing_mode || 'quantity',
       }));
 
-      const { error: itemsError } = await supabase
+      const { data: insertedItems, error: itemsError } = await supabase
         .from('purchase_items')
-        .insert(itemsToInsert);
+        .insert(itemsToInsert)
+        .select('id');
 
       if (itemsError) throw itemsError;
+
+      if (tracksInventory) {
+        await inventoryService.createFromPurchase(
+          id,
+          purchaseData.vendor_id,
+          items,
+          (insertedItems || []).map((row) => row.id)
+        );
+      }
     }
 
     return purchaseService.getPurchase(id);
   },
 
   deletePurchase: async (id: string): Promise<void> => {
+    await inventoryService.deletePurchaseStockIfUnused(id);
+
     // 1. Find all vendor_ledger_entries linked to this purchase
     const { data: ledgerEntries } = await supabase
       .from('vendor_ledger_entries')
