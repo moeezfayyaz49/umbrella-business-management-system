@@ -3,10 +3,12 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PrintIcon from '@mui/icons-material/Print';
 import ImageIcon from '@mui/icons-material/Image';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import UndoIcon from '@mui/icons-material/Undo';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState } from 'react';
 import { PurchaseView } from '../../features/purchases/components/PurchaseView';
 import { usePurchase } from '../../features/purchases/hooks/usePurchase';
+import { usePurchaseStock } from '../../features/inventory/hooks/useInventory';
 import { useCreateVendorTransfer } from '../../features/vendors/hooks/useVendorMutations';
 import { VendorTransferDialog } from '../../features/vendors/components/VendorTransferDialog';
 import type { VendorTransferFormInputs } from '../../features/vendors/schemas';
@@ -17,9 +19,14 @@ export const PurchaseDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: purchase, isLoading } = usePurchase(id || '');
+  const { data: purchaseStock } = usePurchaseStock(id || '');
   const transferMutation = useCreateVendorTransfer();
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [savingImage, setSavingImage] = useState(false);
+
+  const hasAvailableStock = (purchaseStock || []).some(
+    (item) => Number(item.quantity_remaining) > 0 || (item.weight_remaining != null && Number(item.weight_remaining) > 0)
+  );
 
   const handleTransferSubmit = async (data: VendorTransferFormInputs) => {
     await transferMutation.mutateAsync(data);
@@ -53,6 +60,16 @@ export const PurchaseDetails = () => {
           Back to Purchases
         </Button>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          {hasAvailableStock && (
+            <Button
+              variant="outlined"
+              color="warning"
+              startIcon={<UndoIcon />}
+              onClick={() => navigate('/returns/vendor/new')}
+            >
+              Return to Vendor
+            </Button>
+          )}
           <Button
             variant="outlined"
             color="secondary"

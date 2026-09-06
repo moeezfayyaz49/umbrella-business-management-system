@@ -22,6 +22,7 @@ export const NetBusinessWorthChart = ({ data }: Props) => {
     month: item.monthLabel,
     netWorth: item.netBusinessWorth,
     cash: item.totalCash,
+    creditCard: item.creditCardBalance,
     stock: item.stock,
     receivables: item.receivables,
     payables: item.vendorPayables,
@@ -33,7 +34,7 @@ export const NetBusinessWorthChart = ({ data }: Props) => {
         Net Business Worth by Month
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Month-end position: Cash + Stock + Receivables − Vendor Payables
+        Month-end position: Cash + Stock + Receivables − Vendor Payables − Credit Card
       </Typography>
       <Box sx={{ height: 320, width: '100%' }}>
         <ResponsiveContainer width="100%" height="100%">

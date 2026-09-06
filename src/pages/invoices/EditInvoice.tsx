@@ -1,4 +1,5 @@
-import { Box, Typography, Button, CircularProgress } from '@mui/material';
+import { useState } from 'react';
+import { Box, Typography, Button, CircularProgress, Alert } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate, useParams } from 'react-router-dom';
 import { InvoiceForm } from '../../features/invoices/components/InvoiceForm';
@@ -11,10 +12,17 @@ export const EditInvoice = () => {
   const navigate = useNavigate();
   const { data: invoice, isLoading } = useInvoice(id || '');
   const updateMutation = useUpdateInvoice(id || '');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = async (data: InvoiceFormInputs) => {
-    await updateMutation.mutateAsync(data);
-    navigate('/invoices');
+    try {
+      setErrorMessage(null);
+      await updateMutation.mutateAsync(data);
+      navigate('/invoices');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to update invoice.';
+      setErrorMessage(message);
+    }
   };
 
   if (isLoading) {
@@ -33,6 +41,12 @@ export const EditInvoice = () => {
         </Button>
         <Typography variant="h5">Edit Invoice {invoice?.invoice_number}</Typography>
       </Box>
+
+      {errorMessage && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setErrorMessage(null)}>
+          {errorMessage}
+        </Alert>
+      )}
 
       {invoice && (
         <InvoiceForm

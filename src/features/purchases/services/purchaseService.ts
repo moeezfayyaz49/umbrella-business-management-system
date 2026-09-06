@@ -2,6 +2,7 @@ import type { Purchase } from '../types';
 import type { PurchaseFormInputs } from '../schemas';
 import { supabase } from '../../../lib/supabase';
 import { calculateLineTotal } from '../../../utils/lineTotal';
+import { inventoryService } from '../../inventory/services/inventoryService';
 
 const calculateTotals = (data: PurchaseFormInputs) => {
   const subtotal = data.items.reduce((acc, item) => acc + calculateLineTotal(item), 0);
@@ -140,7 +141,7 @@ export const purchaseService = {
         }]);
     }
 
-    // 2. Insert items
+    // 2. Insert items and create live stock only for lines marked add_to_stock
     if (items && items.length > 0) {
       const itemsToInsert = items.map(item => ({
         purchase_id: newPurchase.id,
@@ -153,13 +154,31 @@ export const purchaseService = {
         weight_unit: item.weight_unit || null,
         color: item.color || null,
         pricing_mode: item.pricing_mode || 'quantity',
+        add_to_stock: item.add_to_stock,
       }));
 
-      const { error: itemsError } = await supabase
+      const { data: insertedItems, error: itemsError } = await supabase
         .from('purchase_items')
-        .insert(itemsToInsert);
+        .insert(itemsToInsert)
+        .select('id');
 
       if (itemsError) throw itemsError;
+
+      const stockEntries = items
+        .map((item, index) => ({
+          item,
+          purchaseItemId: (insertedItems || [])[index]?.id,
+        }))
+        .filter((entry) => entry.item.add_to_stock && entry.purchaseItemId);
+
+      if (stockEntries.length > 0) {
+        await inventoryService.createFromPurchase(
+          newPurchase.id,
+          purchaseData.vendor_id,
+          stockEntries.map((entry) => entry.item),
+          stockEntries.map((entry) => entry.purchaseItemId as string)
+        );
+      }
     }
 
     return purchaseService.getPurchase(newPurchase.id);
@@ -168,6 +187,9 @@ export const purchaseService = {
   updatePurchase: async (id: string, data: PurchaseFormInputs): Promise<Purchase> => {
     const { total_amount, remaining_amount } = calculateTotals(data);
     const { items, paid_description, ...purchaseData } = data;
+
+    // Only purchases that already track inventory (or newly marked stock lines) sync stock.
+    await inventoryService.preparePurchaseStockResync(id);
 
     // 1. Update purchase header
     const { error: updateError } = await supabase
@@ -225,7 +247,7 @@ export const purchaseService = {
 
     if (deleteError) throw deleteError;
 
-    // 3. Insert new items
+    // 3. Insert new items and recreate stock for lines marked add_to_stock
     if (items && items.length > 0) {
       const itemsToInsert = items.map(item => ({
         purchase_id: id,
@@ -238,19 +260,39 @@ export const purchaseService = {
         weight_unit: item.weight_unit || null,
         color: item.color || null,
         pricing_mode: item.pricing_mode || 'quantity',
+        add_to_stock: item.add_to_stock,
       }));
 
-      const { error: itemsError } = await supabase
+      const { data: insertedItems, error: itemsError } = await supabase
         .from('purchase_items')
-        .insert(itemsToInsert);
+        .insert(itemsToInsert)
+        .select('id');
 
       if (itemsError) throw itemsError;
+
+      const stockEntries = items
+        .map((item, index) => ({
+          item,
+          purchaseItemId: (insertedItems || [])[index]?.id,
+        }))
+        .filter((entry) => entry.item.add_to_stock && entry.purchaseItemId);
+
+      if (stockEntries.length > 0) {
+        await inventoryService.createFromPurchase(
+          id,
+          purchaseData.vendor_id,
+          stockEntries.map((entry) => entry.item),
+          stockEntries.map((entry) => entry.purchaseItemId as string)
+        );
+      }
     }
 
     return purchaseService.getPurchase(id);
   },
 
   deletePurchase: async (id: string): Promise<void> => {
+    await inventoryService.deletePurchaseStockIfUnused(id);
+
     // 1. Find all vendor_ledger_entries linked to this purchase
     const { data: ledgerEntries } = await supabase
       .from('vendor_ledger_entries')

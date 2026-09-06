@@ -4,6 +4,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import InventoryIcon from '@mui/icons-material/Inventory2';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
@@ -25,6 +26,7 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
     { path: '/vendors', label: 'Vendors', icon: <LocalShippingIcon /> },
     { path: '/invoices', label: 'Invoices', icon: <ReceiptIcon /> },
     { path: '/purchases', label: 'Purchases', icon: <ShoppingCartIcon /> },
+    { path: '/stock', label: 'Stock', icon: <InventoryIcon /> },
     { path: '/expenses', label: 'Expenses', icon: <AccountBalanceWalletIcon /> },
     { path: '/cashbook', label: 'Cash Book', icon: <AccountBalanceIcon /> },
     { path: '/daily-records', label: 'Daily Records', icon: <CalendarMonthIcon /> },

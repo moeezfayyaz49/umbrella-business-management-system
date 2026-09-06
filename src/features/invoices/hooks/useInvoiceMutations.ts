@@ -2,13 +2,21 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { invoiceService } from '../services/invoiceService';
 import type { InvoiceFormInputs } from '../schemas';
 
+const invalidateInvoiceRelated = (queryClient: ReturnType<typeof useQueryClient>, id?: string) => {
+  queryClient.invalidateQueries({ queryKey: ['invoices'] });
+  if (id) queryClient.invalidateQueries({ queryKey: ['invoices', id] });
+  queryClient.invalidateQueries({ queryKey: ['inventory'] });
+  queryClient.invalidateQueries({ queryKey: ['netBusinessWorth'] });
+  queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+};
+
 export const useCreateInvoice = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data: InvoiceFormInputs) => invoiceService.createInvoice(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      invalidateInvoiceRelated(queryClient);
     },
   });
 };
@@ -19,8 +27,7 @@ export const useUpdateInvoice = (id: string) => {
   return useMutation({
     mutationFn: (data: InvoiceFormInputs) => invoiceService.updateInvoice(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
-      queryClient.invalidateQueries({ queryKey: ['invoices', id] });
+      invalidateInvoiceRelated(queryClient, id);
     },
   });
 };
@@ -31,7 +38,7 @@ export const useDeleteInvoice = () => {
   return useMutation({
     mutationFn: (id: string) => invoiceService.deleteInvoice(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      invalidateInvoiceRelated(queryClient);
     },
   });
 };

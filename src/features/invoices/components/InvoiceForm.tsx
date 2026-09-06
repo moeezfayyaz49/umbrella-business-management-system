@@ -2,23 +2,27 @@ import {
   Box, Button, TextField, Typography, Paper,
   IconButton, Divider, Select, MenuItem, FormControl, InputLabel,
   Accordion, AccordionSummary, AccordionDetails, Autocomplete, Tooltip,
-  ToggleButton, ToggleButtonGroup
+  ToggleButton, ToggleButtonGroup, Chip
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import AddIcon from '@mui/icons-material/Add';
+import InventoryIcon from '@mui/icons-material/Inventory2';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { invoiceSchema } from '../schemas';
 import type { InvoiceFormInputs } from '../schemas';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Invoice } from '../types';
 import { useClients } from '../../clients/hooks/useClients';
 import dayjs from 'dayjs';
 import { calculateLineTotal } from '../../../utils/lineTotal';
 import { useSettings } from '../../settings/hooks/useSettings';
 import { formatCurrency } from '../../../utils/currency';
+import { AddFromStockDialog, type StockPickSelection } from '../../inventory/components/AddFromStockDialog';
+import { useAllStock } from '../../inventory/hooks/useInventory';
+import { toStockQuantity } from '../../../utils/unitConversion';
 
 interface Props {
   initialData?: Invoice;
@@ -29,6 +33,8 @@ interface Props {
 export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
   const { data: clients } = useClients();
   const { data: settings } = useSettings();
+  const { data: stockItems } = useAllStock();
+  const [stockDialogOpen, setStockDialogOpen] = useState(false);
 
   const {
     register,
@@ -92,6 +98,65 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
       weight_unit: item.weight_unit ?? '',
       color: item.color ?? '',
       pricing_mode: item.pricing_mode || 'quantity',
+      inventory_item_id: item.inventory_item_id || null,
+    });
+  };
+
+  const reservedByForm = useMemo(() => {
+    const stockById = new Map((stockItems || []).map((s) => [s.id, s]));
+    const map: Record<string, { quantity: number; weight: number }> = {};
+    (watchItems || []).forEach((item) => {
+      if (!item.inventory_item_id) return;
+      const stockItem = stockById.get(item.inventory_item_id);
+      const current = map[item.inventory_item_id] || { quantity: 0, weight: 0 };
+      current.quantity += toStockQuantity({
+        stockUnit: stockItem?.unit || item.unit,
+        invoiceUnit: item.unit,
+        invoiceQuantity: Number(item.quantity) || 0,
+      });
+      current.weight += typeof item.weight === 'number' ? item.weight : Number(item.weight) || 0;
+      map[item.inventory_item_id] = current;
+    });
+    return map;
+  }, [watchItems, stockItems]);
+
+  const stockCredit = useMemo(() => {
+    const map: Record<string, { quantity: number; weight: number }> = {};
+    (initialData?.items || []).forEach((item) => {
+      if (!item.inventory_item_id) return;
+      const current = map[item.inventory_item_id] || { quantity: 0, weight: 0 };
+      current.quantity += Number(item.stock_quantity ?? item.quantity) || 0;
+      current.weight += Number(item.stock_weight ?? item.weight) || 0;
+      map[item.inventory_item_id] = current;
+    });
+    return map;
+  }, [initialData]);
+
+  const handleAddFromStock = (picks: StockPickSelection[]) => {
+    const isBlankOnlyItem =
+      fields.length === 1 &&
+      !watchItems?.[0]?.description &&
+      !watchItems?.[0]?.inventory_item_id;
+
+    picks.forEach((pick, index) => {
+      const line = {
+        description: pick.description,
+        quantity: pick.quantity,
+        unit_price: pick.unit_price,
+        cost: pick.cost,
+        unit: pick.unit,
+        weight: pick.weight,
+        weight_unit: pick.weight_unit || '',
+        color: pick.color || '',
+        pricing_mode: pick.pricing_mode,
+        inventory_item_id: pick.inventory_item_id,
+      };
+
+      if (isBlankOnlyItem && index === 0) {
+        setValue('items.0', line);
+      } else {
+        append(line);
+      }
     });
   };
 
@@ -121,6 +186,7 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
           weight_unit: i.weight_unit ?? '',
           color: i.color ?? '',
           pricing_mode: i.pricing_mode || 'quantity',
+          inventory_item_id: i.inventory_item_id || null,
         })),
       });
     }
@@ -270,6 +336,9 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
                   </ToggleButtonGroup>
                 )}
               />
+              {watchItems?.[index]?.inventory_item_id && (
+                <Chip size="small" color="primary" variant="outlined" label="From stock" />
+              )}
               {pricingMode === 'weight' && (
                 <Typography variant="caption" color="text.secondary">
                   Total = total weight × price per {weightUnit}
@@ -371,9 +440,14 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
           );
         })}
 
-        <Button startIcon={<AddIcon />} onClick={() => append({ description: '', quantity: 1, unit_price: 0, unit: 'Piece', pricing_mode: 'quantity' })}>
-          Add Item
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <Button startIcon={<AddIcon />} onClick={() => append({ description: '', quantity: 1, unit_price: 0, unit: 'Piece', pricing_mode: 'quantity', inventory_item_id: null })}>
+            Add Item
+          </Button>
+          <Button startIcon={<InventoryIcon />} variant="outlined" onClick={() => setStockDialogOpen(true)}>
+            Add from Stock
+          </Button>
+        </Box>
 
         <Divider sx={{ my: 3 }} />
 
@@ -428,6 +502,14 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
           {initialData ? 'Update Invoice' : 'Create Invoice'}
         </Button>
       </Box>
+
+      <AddFromStockDialog
+        open={stockDialogOpen}
+        onClose={() => setStockDialogOpen(false)}
+        onAdd={handleAddFromStock}
+        reservedByForm={reservedByForm}
+        stockCredit={stockCredit}
+      />
     </Box>
   );
 };

@@ -2,6 +2,7 @@ import type { Invoice } from '../types';
 import type { InvoiceFormInputs } from '../schemas';
 import { supabase } from '../../../lib/supabase';
 import { calculateLineTotal } from '../../../utils/lineTotal';
+import { inventoryService } from '../../inventory/services/inventoryService';
 
 const calculateTotals = (data: InvoiceFormInputs) => {
   const subtotal = data.items.reduce((acc, item) => acc + calculateLineTotal(item), 0);
@@ -11,6 +12,57 @@ const calculateTotals = (data: InvoiceFormInputs) => {
   const remaining_amount = total_amount - data.paid_amount;
 
   return { total_amount, remaining_amount };
+};
+
+const mapInvoiceItems = (invoiceId: string, items: InvoiceFormInputs['items']) =>
+  items.map(item => ({
+    ...(item.id ? { id: item.id } : {}),
+    invoice_id: invoiceId,
+    description: item.description,
+    quantity: item.quantity,
+    unit_price: item.unit_price,
+    total: calculateLineTotal(item),
+    unit: item.unit || 'Piece',
+    weight: item.weight || null,
+    weight_unit: item.weight_unit || null,
+    color: item.color || null,
+    pricing_mode: item.pricing_mode || 'quantity',
+    ...(item.cost !== undefined ? { cost: item.cost } : {}),
+    inventory_item_id: item.inventory_item_id || null,
+    // Filled accurately after unit conversion in applyStockDeductions
+    stock_quantity: null as number | null,
+    stock_weight: item.inventory_item_id
+      ? (typeof item.weight === 'number' ? item.weight : null)
+      : null,
+  }));
+
+const applyStockDeductions = async (
+  invoiceId: string,
+  items: InvoiceFormInputs['items'],
+  insertedItems: { id: string }[]
+) => {
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (!item.inventory_item_id) continue;
+    const result = await inventoryService.deductForInvoiceItem({
+      inventoryItemId: item.inventory_item_id,
+      quantity: item.quantity,
+      unit: item.unit,
+      weight: typeof item.weight === 'number' ? item.weight : null,
+      invoiceId,
+      invoiceItemId: insertedItems[i]?.id,
+    });
+
+    if (insertedItems[i]?.id) {
+      await supabase
+        .from('invoice_items')
+        .update({
+          stock_quantity: result.stockQuantity,
+          stock_weight: result.stockWeight,
+        })
+        .eq('id', insertedItems[i].id);
+    }
+  }
 };
 
 export const invoiceService = {
@@ -51,7 +103,6 @@ export const invoiceService = {
 
     const { items, ...invoiceData } = data;
 
-    // 1. Insert invoice
     const { data: newInvoice, error: invoiceError } = await supabase
       .from('invoices')
       .insert([{
@@ -64,38 +115,28 @@ export const invoiceService = {
 
     if (invoiceError) throw invoiceError;
 
-    // 2. Insert items
     if (items && items.length > 0) {
-      const itemsToInsert = items.map(item => ({
-        ...(item.id ? { id: item.id } : {}),
-        invoice_id: newInvoice.id,
-        description: item.description,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        total: calculateLineTotal(item),
-        unit: item.unit || 'Piece',
-        weight: item.weight || null,
-        weight_unit: item.weight_unit || null,
-        color: item.color || null,
-        pricing_mode: item.pricing_mode || 'quantity',
-        ...(item.cost !== undefined ? { cost: item.cost } : {})
-      }));
+      const itemsToInsert = mapInvoiceItems(newInvoice.id, items);
 
-      const { error: itemsError } = await supabase
+      const { data: insertedItems, error: itemsError } = await supabase
         .from('invoice_items')
-        .insert(itemsToInsert);
+        .insert(itemsToInsert)
+        .select('id');
 
       if (itemsError) throw itemsError;
+
+      await applyStockDeductions(newInvoice.id, items, insertedItems || []);
     }
 
-    return invoiceService.getInvoice(newInvoice.id); // Re-fetch to get complete object
+    return invoiceService.getInvoice(newInvoice.id);
   },
 
   updateInvoice: async (id: string, data: InvoiceFormInputs): Promise<Invoice> => {
     const { total_amount, remaining_amount } = calculateTotals(data);
     const { items, ...invoiceData } = data;
 
-    // 1. Update invoice header
+    await inventoryService.restoreInvoiceAllocations(id);
+
     const { error: updateError } = await supabase
       .from('invoices')
       .update({
@@ -108,7 +149,6 @@ export const invoiceService = {
 
     if (updateError) throw updateError;
 
-    // 2. Delete existing items
     const { error: deleteError } = await supabase
       .from('invoice_items')
       .delete()
@@ -116,34 +156,26 @@ export const invoiceService = {
 
     if (deleteError) throw deleteError;
 
-    // 3. Insert new items
     if (items && items.length > 0) {
-      const itemsToInsert = items.map(item => ({
-        ...(item.id ? { id: item.id } : {}),
-        invoice_id: id,
-        description: item.description,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        total: calculateLineTotal(item),
-        unit: item.unit || 'Piece',
-        weight: item.weight || null,
-        weight_unit: item.weight_unit || null,
-        color: item.color || null,
-        pricing_mode: item.pricing_mode || 'quantity',
-        ...(item.cost !== undefined ? { cost: item.cost } : {})
-      }));
+      const itemsWithoutIds = items.map(({ id: _itemId, ...rest }) => rest);
+      const itemsToInsert = mapInvoiceItems(id, itemsWithoutIds as InvoiceFormInputs['items']);
 
-      const { error: itemsError } = await supabase
+      const { data: insertedItems, error: itemsError } = await supabase
         .from('invoice_items')
-        .insert(itemsToInsert);
+        .insert(itemsToInsert)
+        .select('id');
 
       if (itemsError) throw itemsError;
+
+      await applyStockDeductions(id, itemsWithoutIds as InvoiceFormInputs['items'], insertedItems || []);
     }
 
     return invoiceService.getInvoice(id);
   },
 
   deleteInvoice: async (id: string): Promise<void> => {
+    await inventoryService.restoreInvoiceAllocations(id);
+
     const { error } = await supabase
       .from('invoices')
       .delete()
@@ -153,7 +185,6 @@ export const invoiceService = {
   },
 
   updateInvoiceItemCosts: async (itemCosts: { id: string, cost: number }[]): Promise<void> => {
-    // Update each item's cost
     const promises = itemCosts.map(item =>
       supabase
         .from('invoice_items')
@@ -163,7 +194,6 @@ export const invoiceService = {
 
     const results = await Promise.all(promises);
 
-    // Check for any errors
     const error = results.find(result => result.error)?.error;
     if (error) throw error;
   }

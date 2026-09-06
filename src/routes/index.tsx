@@ -21,6 +21,9 @@ import { Cashbook } from '../pages/cashbook/Cashbook';
 import { DailyRecords } from '../pages/daily-records/DailyRecords';
 import { Reports } from '../pages/reports/Reports';
 import { Settings } from '../pages/settings/Settings';
+import { Stock } from '../pages/stock/Stock';
+import { CreateVendorReturn } from '../pages/returns/CreateVendorReturn';
+import { CreateClientReturn } from '../pages/returns/CreateClientReturn';
 
 export const router = createBrowserRouter([
   {
@@ -82,6 +85,18 @@ export const router = createBrowserRouter([
           {
             path: 'purchases/:id',
             element: <PurchaseDetails />,
+          },
+          {
+            path: 'stock',
+            element: <Stock />,
+          },
+          {
+            path: 'returns/vendor/new',
+            element: <CreateVendorReturn />,
+          },
+          {
+            path: 'returns/client/new',
+            element: <CreateClientReturn />,
           },
           {
             path: 'expenses',
