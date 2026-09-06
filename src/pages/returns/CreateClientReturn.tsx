@@ -203,7 +203,7 @@ export const CreateClientReturn = () => {
                     }
                     label={
                       <Box>
-                        <Typography fontWeight={600}>{invoiceItem.description}</Typography>
+                        <Typography sx={{ fontWeight: 600 }}>{invoiceItem.description}</Typography>
                         <Typography variant="body2" color="text.secondary">
                           Invoiced qty {invoiceItem.quantity}
                           {invoiceItem.weight != null ? ` · weight ${invoiceItem.weight}` : ''}

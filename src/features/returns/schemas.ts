@@ -8,7 +8,7 @@ const returnItemBase = {
   weight: z.number().optional().or(z.literal('')),
   weight_unit: z.string().optional().or(z.literal('')),
   color: z.string().optional(),
-  pricing_mode: z.enum(['quantity', 'weight']).default('quantity'),
+  pricing_mode: z.enum(['quantity', 'weight']),
 };
 
 export const vendorReturnItemSchema = z.object({

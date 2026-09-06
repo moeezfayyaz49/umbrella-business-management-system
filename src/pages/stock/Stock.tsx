@@ -124,7 +124,7 @@ export const Stock = () => {
                 return (
                   <TableRow key={item.id}>
                     <TableCell>
-                      <Typography fontWeight={600}>{item.description}</Typography>
+                      <Typography sx={{ fontWeight: 600 }}>{item.description}</Typography>
                       <Typography variant="caption" color="text.secondary">
                         {item.unit || 'Piece'}
                         {item.color ? ` · ${item.color}` : ''}

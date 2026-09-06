@@ -173,7 +173,7 @@ export const CreateVendorReturn = () => {
             const stockItem = vendorStock.find((s) => s.id === item.inventory_item_id);
             return (
               <Box key={item.inventory_item_id} sx={{ p: 2, mb: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-                <Typography fontWeight={600}>{item.description}</Typography>
+                <Typography sx={{ fontWeight: 600 }}>{item.description}</Typography>
                 <Box sx={{ display: 'flex', gap: 2, mt: 1, flexWrap: 'wrap' }}>
                   <TextField
                     label="Qty"
