@@ -202,7 +202,7 @@ export const AddFromStockDialog = ({
                     }
                     label={
                       <Box>
-                        <Typography fontWeight={600}>{item.description}</Typography>
+                        <Typography sx={{ fontWeight: 600 }}>{item.description}</Typography>
                         <Typography variant="body2" color="text.secondary">
                           {item.purchase?.purchase_number ? `Purchase ${item.purchase.purchase_number}` : 'Stock'}
                           {item.vendor?.name ? ` · ${item.vendor.name}` : ''}

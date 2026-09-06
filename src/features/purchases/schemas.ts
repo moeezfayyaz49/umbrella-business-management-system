@@ -11,8 +11,7 @@ export const purchaseItemSchema = z.object({
   color: z.string().optional(),
   pricing_mode: z.enum(['quantity', 'weight']),
   add_to_stock: z.boolean({
-    required_error: 'Choose whether to add this item to stock',
-    invalid_type_error: 'Choose whether to add this item to stock',
+    error: 'Choose whether to add this item to stock',
   }),
   inventory_item_id: z.string().optional().nullable(),
 }).superRefine((item, ctx) => {
