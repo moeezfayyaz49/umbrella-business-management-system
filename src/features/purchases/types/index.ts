@@ -9,6 +9,7 @@ export interface PurchaseItem {
   weight_unit?: string;
   color?: string;
   pricing_mode?: 'quantity' | 'weight';
+  add_to_stock?: boolean;
 }
 
 export interface Purchase {

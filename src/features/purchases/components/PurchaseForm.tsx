@@ -1,6 +1,6 @@
 import {
   Box, Button, TextField, Typography, Paper,
-  IconButton, Divider, Select, MenuItem, FormControl, InputLabel,
+  IconButton, Divider, Select, MenuItem, FormControl, InputLabel, FormHelperText, FormLabel,
   Accordion, AccordionSummary, AccordionDetails, Autocomplete, Tooltip,
   ToggleButton, ToggleButtonGroup, Chip
 } from '@mui/material';
@@ -82,7 +82,8 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
       weight_unit: item.weight_unit ?? '',
       color: item.color ?? '',
       pricing_mode: item.pricing_mode || 'quantity',
-      inventory_item_id: item.inventory_item_id || null,
+      add_to_stock: item.add_to_stock,
+      inventory_item_id: item.add_to_stock ? (item.inventory_item_id || null) : null,
     });
   };
 
@@ -128,6 +129,7 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
           weight_unit: i.weight_unit ?? '',
           color: i.color ?? '',
           pricing_mode: i.pricing_mode || 'quantity',
+          add_to_stock: i.add_to_stock ?? true,
           inventory_item_id: null,
         })),
       });
@@ -257,6 +259,7 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
         {fields.map((field, index) => {
           const pricingMode = watchItems?.[index]?.pricing_mode || 'quantity';
           const weightUnit = watchItems?.[index]?.weight_unit || 'kg';
+          const addToStock = watchItems?.[index]?.add_to_stock;
           const lineTotal = calculateLineTotal(watchItems?.[index] || {});
 
           return (
@@ -283,8 +286,11 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
                     </ToggleButtonGroup>
                   )}
                 />
-                {watchItems?.[index]?.inventory_item_id && (
+                {addToStock === true && watchItems?.[index]?.inventory_item_id && (
                   <Chip size="small" color="primary" variant="outlined" label="Adds to existing stock" />
+                )}
+                {addToStock === false && (
+                  <Chip size="small" variant="outlined" label="Not added to stock" />
                 )}
                 {pricingMode === 'weight' && (
                   <Typography variant="caption" color="text.secondary">
@@ -293,24 +299,59 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
                 )}
               </Box>
 
-              <Box sx={{ mb: 2 }}>
-                <Autocomplete
-                  options={stockItems || []}
-                  value={(stockItems || []).find((s) => s.id === watchItems?.[index]?.inventory_item_id) || null}
-                  onChange={(_, stockItem) => applyStockItem(index, stockItem)}
-                  getOptionLabel={(option) =>
-                    `${option.description} · left ${option.quantity_remaining}${option.color ? ` · ${option.color}` : ''}`
-                  }
-                  isOptionEqualToValue={(option, value) => option.id === value.id}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Add to existing stock item (optional)"
-                      helperText="Select an existing item to increase its quantity, or leave empty for a new stock item."
-                    />
+              <FormControl
+                required
+                error={!!errors.items?.[index]?.add_to_stock}
+                sx={{ mb: 2, display: 'block' }}
+              >
+                <FormLabel sx={{ mb: 1, display: 'block' }}>Add to stock</FormLabel>
+                <Controller
+                  name={`items.${index}.add_to_stock`}
+                  control={control}
+                  render={({ field: stockField }) => (
+                    <ToggleButtonGroup
+                      exclusive
+                      size="small"
+                      value={typeof stockField.value === 'boolean' ? (stockField.value ? 'yes' : 'no') : null}
+                      onChange={(_, value) => {
+                        if (value === null) return;
+                        const next = value === 'yes';
+                        stockField.onChange(next);
+                        if (!next) {
+                          setValue(`items.${index}.inventory_item_id`, null);
+                        }
+                      }}
+                    >
+                      <ToggleButton value="yes">Yes — add to stock</ToggleButton>
+                      <ToggleButton value="no">No — do not add to stock</ToggleButton>
+                    </ToggleButtonGroup>
                   )}
                 />
-              </Box>
+                <FormHelperText>
+                  {errors.items?.[index]?.add_to_stock?.message || 'Required for each item'}
+                </FormHelperText>
+              </FormControl>
+
+              {addToStock === true && (
+                <Box sx={{ mb: 2 }}>
+                  <Autocomplete
+                    options={stockItems || []}
+                    value={(stockItems || []).find((s) => s.id === watchItems?.[index]?.inventory_item_id) || null}
+                    onChange={(_, stockItem) => applyStockItem(index, stockItem)}
+                    getOptionLabel={(option) =>
+                      `${option.description} · left ${option.quantity_remaining}${option.color ? ` · ${option.color}` : ''}`
+                    }
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Add to existing stock item (optional)"
+                        helperText="Select an existing item to increase its quantity, or leave empty for a new stock item."
+                      />
+                    )}
+                  />
+                </Box>
+              )}
 
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', mb: 2, flexWrap: 'wrap' }}>
                 <TextField
@@ -407,7 +448,10 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
           );
         })}
 
-        <Button startIcon={<AddIcon />} onClick={() => append({ description: '', quantity: 1, unit_price: 0, unit: 'Piece', pricing_mode: 'quantity', inventory_item_id: null })}>
+        <Button
+          startIcon={<AddIcon />}
+          onClick={() => append({ description: '', quantity: 1, unit_price: 0, unit: 'Piece', pricing_mode: 'quantity', inventory_item_id: null } as PurchaseFormInputs['items'][number])}
+        >
           Add Item
         </Button>
 

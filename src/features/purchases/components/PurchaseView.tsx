@@ -43,6 +43,7 @@ export const PurchaseView = ({ purchase }: { purchase: Purchase }) => {
           <TableHead sx={{ backgroundColor: 'rgba(0,0,0,0.04)' }}>
             <TableRow>
               <TableCell>Description</TableCell>
+              <TableCell>Stock</TableCell>
               <TableCell align="right">Qty</TableCell>
               <TableCell align="right">Unit Price</TableCell>
               <TableCell align="right">Total</TableCell>
@@ -63,6 +64,7 @@ export const PurchaseView = ({ purchase }: { purchase: Purchase }) => {
                     </Typography>
                   )}
                 </TableCell>
+                <TableCell>{item.add_to_stock === false ? 'No' : 'Yes'}</TableCell>
                 <TableCell align="right">{item.quantity} {item.unit}</TableCell>
                 <TableCell align="right">
                   {formatCurrency(item.unit_price, settings?.currency)}

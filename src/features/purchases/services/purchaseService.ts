@@ -141,7 +141,7 @@ export const purchaseService = {
         }]);
     }
 
-    // 2. Insert items and create live stock (future purchases only — no backfill)
+    // 2. Insert items and create live stock only for lines marked add_to_stock
     if (items && items.length > 0) {
       const itemsToInsert = items.map(item => ({
         purchase_id: newPurchase.id,
@@ -154,6 +154,7 @@ export const purchaseService = {
         weight_unit: item.weight_unit || null,
         color: item.color || null,
         pricing_mode: item.pricing_mode || 'quantity',
+        add_to_stock: item.add_to_stock,
       }));
 
       const { data: insertedItems, error: itemsError } = await supabase
@@ -163,12 +164,21 @@ export const purchaseService = {
 
       if (itemsError) throw itemsError;
 
-      await inventoryService.createFromPurchase(
-        newPurchase.id,
-        purchaseData.vendor_id,
-        items,
-        (insertedItems || []).map((row) => row.id)
-      );
+      const stockEntries = items
+        .map((item, index) => ({
+          item,
+          purchaseItemId: (insertedItems || [])[index]?.id,
+        }))
+        .filter((entry) => entry.item.add_to_stock && entry.purchaseItemId);
+
+      if (stockEntries.length > 0) {
+        await inventoryService.createFromPurchase(
+          newPurchase.id,
+          purchaseData.vendor_id,
+          stockEntries.map((entry) => entry.item),
+          stockEntries.map((entry) => entry.purchaseItemId as string)
+        );
+      }
     }
 
     return purchaseService.getPurchase(newPurchase.id);
@@ -178,8 +188,8 @@ export const purchaseService = {
     const { total_amount, remaining_amount } = calculateTotals(data);
     const { items, paid_description, ...purchaseData } = data;
 
-    // Only new purchases track inventory; old ones stay without stock.
-    const tracksInventory = await inventoryService.preparePurchaseStockResync(id);
+    // Only purchases that already track inventory (or newly marked stock lines) sync stock.
+    await inventoryService.preparePurchaseStockResync(id);
 
     // 1. Update purchase header
     const { error: updateError } = await supabase
@@ -237,7 +247,7 @@ export const purchaseService = {
 
     if (deleteError) throw deleteError;
 
-    // 3. Insert new items
+    // 3. Insert new items and recreate stock for lines marked add_to_stock
     if (items && items.length > 0) {
       const itemsToInsert = items.map(item => ({
         purchase_id: id,
@@ -250,6 +260,7 @@ export const purchaseService = {
         weight_unit: item.weight_unit || null,
         color: item.color || null,
         pricing_mode: item.pricing_mode || 'quantity',
+        add_to_stock: item.add_to_stock,
       }));
 
       const { data: insertedItems, error: itemsError } = await supabase
@@ -259,12 +270,19 @@ export const purchaseService = {
 
       if (itemsError) throw itemsError;
 
-      if (tracksInventory) {
+      const stockEntries = items
+        .map((item, index) => ({
+          item,
+          purchaseItemId: (insertedItems || [])[index]?.id,
+        }))
+        .filter((entry) => entry.item.add_to_stock && entry.purchaseItemId);
+
+      if (stockEntries.length > 0) {
         await inventoryService.createFromPurchase(
           id,
           purchaseData.vendor_id,
-          items,
-          (insertedItems || []).map((row) => row.id)
+          stockEntries.map((entry) => entry.item),
+          stockEntries.map((entry) => entry.purchaseItemId as string)
         );
       }
     }
