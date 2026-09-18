@@ -16,9 +16,10 @@ interface Props {
   isLoading: boolean;
   onEdit: (client: Client) => void;
   onDelete: (id: string) => void;
+  closingBalanceLabel?: string;
 }
 
-export const ClientList = ({ clients, isLoading, onEdit, onDelete }: Props) => {
+export const ClientList = ({ clients, isLoading, onEdit, onDelete, closingBalanceLabel }: Props) => {
   const { data: settings } = useSettings();
   const navigate = useNavigate();
 
@@ -31,7 +32,7 @@ export const ClientList = ({ clients, isLoading, onEdit, onDelete }: Props) => {
             <TableCell>Phones</TableCell>
             <TableCell>City</TableCell>
             <TableCell align="right">Opening Balance</TableCell>
-            <TableCell align="right">Closing Balance</TableCell>
+            <TableCell align="right">{closingBalanceLabel || 'Closing Balance'}</TableCell>
             <TableCell align="center">Actions</TableCell>
           </TableRow>
         </TableHead>

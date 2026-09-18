@@ -2,20 +2,32 @@ import { Box, Typography, Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { useState } from 'react';
+import dayjs, { type Dayjs } from 'dayjs';
 import { VendorList } from '../../features/vendors/components/VendorList';
 import { VendorFormDialog } from '../../features/vendors/components/VendorFormDialog';
 import { VendorTransferDialog } from '../../features/vendors/components/VendorTransferDialog';
 import { useVendors } from '../../features/vendors/hooks/useVendors';
 import { useCreateVendor, useUpdateVendor, useDeleteVendor, useCreateVendorTransfer } from '../../features/vendors/hooks/useVendorMutations';
 import { useDebounce } from '../../hooks/useDebounce';
+import {
+  ReportPeriodFilter,
+  type ReportPeriodMode,
+} from '../../features/reports/components/ReportPeriodFilter';
 import type { Vendor } from '../../features/vendors/types';
 import type { VendorFormInputs, VendorTransferFormInputs } from '../../features/vendors/schemas';
 
 export const Vendors = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [periodMode, setPeriodMode] = useState<ReportPeriodMode>('all');
+  const [selectedMonth, setSelectedMonth] = useState<Dayjs>(dayjs());
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  const { data: vendors, isLoading } = useVendors(debouncedSearchTerm);
+  const asOfDate =
+    periodMode === 'month'
+      ? selectedMonth.endOf('month').format('YYYY-MM-DD')
+      : undefined;
+
+  const { data: vendors, isLoading } = useVendors(debouncedSearchTerm, asOfDate);
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | undefined>();
@@ -62,7 +74,13 @@ export const Vendors = () => {
     <Box>
       <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' }, gap: 2, mb: 3 }}>
         <Typography variant="h4">Vendors</Typography>
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, alignItems: 'stretch' }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, alignItems: 'stretch', flexWrap: 'wrap' }}>
+          <ReportPeriodFilter
+            mode={periodMode}
+            selectedMonth={selectedMonth}
+            onModeChange={setPeriodMode}
+            onMonthChange={setSelectedMonth}
+          />
           <input 
             type="text" 
             placeholder="Search vendors..." 
@@ -89,6 +107,11 @@ export const Vendors = () => {
         isLoading={isLoading}
         onEdit={handleOpenDialog}
         onDelete={handleDelete}
+        closingBalanceLabel={
+          periodMode === 'month'
+            ? `Closing Balance (${selectedMonth.format('MMM YYYY')})`
+            : undefined
+        }
       />
 
       <VendorFormDialog

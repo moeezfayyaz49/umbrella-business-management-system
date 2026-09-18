@@ -1,20 +1,32 @@
 import { Box, Typography, Button, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useState, useMemo } from 'react';
+import dayjs, { type Dayjs } from 'dayjs';
 import { ClientList } from '../../features/clients/components/ClientList';
 import { ClientFormDialog } from '../../features/clients/components/ClientFormDialog';
 import { useClients } from '../../features/clients/hooks/useClients';
 import { useCreateClient, useUpdateClient, useDeleteClient } from '../../features/clients/hooks/useClientMutations';
 import { useDebounce } from '../../hooks/useDebounce';
+import {
+  ReportPeriodFilter,
+  type ReportPeriodMode,
+} from '../../features/reports/components/ReportPeriodFilter';
 import type { Client } from '../../features/clients/types';
 import type { ClientFormInputs } from '../../features/clients/schemas';
 
 export const Clients = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCity, setFilterCity] = useState('');
+  const [periodMode, setPeriodMode] = useState<ReportPeriodMode>('all');
+  const [selectedMonth, setSelectedMonth] = useState<Dayjs>(dayjs());
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  const { data: clients, isLoading } = useClients(debouncedSearchTerm);
+  const asOfDate =
+    periodMode === 'month'
+      ? selectedMonth.endOf('month').format('YYYY-MM-DD')
+      : undefined;
+
+  const { data: clients, isLoading } = useClients(debouncedSearchTerm, asOfDate);
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | undefined>();
@@ -64,7 +76,13 @@ export const Clients = () => {
     <Box>
       <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' }, gap: 2, mb: 3 }}>
         <Typography variant="h4">Clients</Typography>
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, alignItems: 'stretch' }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, alignItems: 'stretch', flexWrap: 'wrap' }}>
+          <ReportPeriodFilter
+            mode={periodMode}
+            selectedMonth={selectedMonth}
+            onModeChange={setPeriodMode}
+            onMonthChange={setSelectedMonth}
+          />
           <FormControl size="small" sx={{ minWidth: 150 }}>
             <InputLabel>Filter by City</InputLabel>
             <Select
@@ -96,6 +114,11 @@ export const Clients = () => {
         isLoading={isLoading}
         onEdit={handleOpenDialog}
         onDelete={handleDelete}
+        closingBalanceLabel={
+          periodMode === 'month'
+            ? `Closing Balance (${selectedMonth.format('MMM YYYY')})`
+            : undefined
+        }
       />
 
       <ClientFormDialog
