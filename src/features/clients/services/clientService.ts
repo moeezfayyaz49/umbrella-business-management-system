@@ -3,14 +3,19 @@ import type { ClientFormInputs } from '../schemas';
 import { supabase } from '../../../lib/supabase';
 
 export const clientService = {
-  getClients: async (searchQuery?: string): Promise<Client[]> => {
+  getClients: async (searchQuery?: string, asOfDate?: string): Promise<Client[]> => {
     let query = supabase
       .from('clients')
-      .select('*, client_ledger_entries(debit, credit)')
+      .select('*, client_ledger_entries(debit, credit, date)')
       .order('created_at', { ascending: false });
 
     if (searchQuery) {
       query = query.or(`name.ilike.%${searchQuery}%,address.ilike.%${searchQuery}%`);
+    }
+
+    // Limit nested ledger rows to entries on or before the selected month-end
+    if (asOfDate) {
+      query = query.lte('client_ledger_entries.date', asOfDate);
     }
 
     const { data, error } = await query;
@@ -18,7 +23,10 @@ export const clientService = {
     if (error) throw error;
     
     return (data as any[]).map(client => {
-      const ledgerEntries = client.client_ledger_entries || [];
+      let ledgerEntries = client.client_ledger_entries || [];
+      if (asOfDate) {
+        ledgerEntries = ledgerEntries.filter((entry: any) => entry.date && entry.date <= asOfDate);
+      }
       const totalDebit = ledgerEntries.reduce((sum: number, entry: any) => sum + (Number(entry.debit) || 0), 0);
       const totalCredit = ledgerEntries.reduce((sum: number, entry: any) => sum + (Number(entry.credit) || 0), 0);
       const closing_balance = Number(client.opening_balance || 0) + totalDebit - totalCredit;

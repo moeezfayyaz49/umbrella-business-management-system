@@ -16,9 +16,10 @@ interface Props {
   isLoading: boolean;
   onEdit: (vendor: Vendor) => void;
   onDelete: (id: string) => void;
+  closingBalanceLabel?: string;
 }
 
-export const VendorList = ({ vendors, isLoading, onEdit, onDelete }: Props) => {
+export const VendorList = ({ vendors, isLoading, onEdit, onDelete, closingBalanceLabel }: Props) => {
   const { data: settings } = useSettings();
   const navigate = useNavigate();
 
@@ -30,7 +31,7 @@ export const VendorList = ({ vendors, isLoading, onEdit, onDelete }: Props) => {
             <TableCell>Name</TableCell>
             <TableCell>Phones</TableCell>
             <TableCell align="right">Opening Balance</TableCell>
-            <TableCell align="right">Closing Balance</TableCell>
+            <TableCell align="right">{closingBalanceLabel || 'Closing Balance'}</TableCell>
             <TableCell align="center">Actions</TableCell>
           </TableRow>
         </TableHead>
