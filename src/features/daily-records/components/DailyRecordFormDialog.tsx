@@ -121,21 +121,36 @@ export const DailyRecordFormDialog = ({ open, onClose, onSubmit, initialData, ba
     setValue('bank_balances', updated);
   };
 
-  const updateStockLine = (index: number, field: 'description' | 'pieces' | 'price_per_piece', value: string | number) => {
-    const updated = [...(stockItems || [])];
-    const current = { ...updated[index] };
-
+  const updateStockLine = (
+    index: number,
+    field: 'description' | 'pieces' | 'price_per_piece',
+    value: string | number,
+  ) => {
+    // Update nested paths only — replacing the whole stock_items array
+    // regenerates useFieldArray ids and steals input focus.
     if (field === 'description') {
-      current.description = String(value);
-    } else if (field === 'pieces') {
-      current.pieces = Number(value);
-    } else {
-      current.price_per_piece = Number(value);
+      setValue(`stock_items.${index}.description`, String(value), {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      return;
     }
 
-    current.total = calculateStockLineTotal(current.pieces || 0, current.price_per_piece || 0);
-    updated[index] = current;
-    setValue('stock_items', updated, { shouldValidate: true });
+    const nextPieces =
+      field === 'pieces' ? Number(value) : Number(stockItems?.[index]?.pieces || 0);
+    const nextPrice =
+      field === 'price_per_piece'
+        ? Number(value)
+        : Number(stockItems?.[index]?.price_per_piece || 0);
+
+    setValue(`stock_items.${index}.${field}`, Number(value), {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+    setValue(
+      `stock_items.${index}.total`,
+      calculateStockLineTotal(nextPieces, nextPrice),
+    );
   };
 
   if (bankAccounts.length === 0) {
