@@ -90,22 +90,35 @@ export const ExpenseFormDialog = ({ open, onClose, onSubmit, initialData }: Prop
     }
   }, [categories, open, initialData, setValue, getValues]);
 
-  const handleFormSubmit = async (data: ExpenseFormInputs) => {
-    if (data.category_id === 'new-other') {
-      try {
-        setIsCreatingCategory(true);
-        const newCat = await expenseService.createCategory({
-          name: 'Other',
-          description: 'Miscellaneous expenses',
-        });
-        await refetch();
-        data.category_id = newCat.id;
-      } catch (error) {
-        console.error('Failed to create Other category', error);
-        setIsCreatingCategory(false);
-        return;
-      }
+  const ensureCategory = async (
+    name: string,
+    description: string,
+  ): Promise<string | null> => {
+    try {
+      setIsCreatingCategory(true);
+      const newCat = await expenseService.createCategory({ name, description });
+      await refetch();
+      return newCat.id;
+    } catch (error) {
+      console.error(`Failed to create ${name} category`, error);
+      return null;
+    } finally {
       setIsCreatingCategory(false);
+    }
+  };
+
+  const handleFormSubmit = async (data: ExpenseFormInputs) => {
+    const pendingCategories: Record<string, { name: string; description: string }> = {
+      'new-other': { name: 'Other', description: 'Miscellaneous expenses' },
+      'new-home-expense': { name: 'Home Expense', description: 'Personal / household expenses' },
+      'new-business-expense': { name: 'Business Expense', description: 'Business-related expenses' },
+    };
+
+    const pending = pendingCategories[data.category_id];
+    if (pending) {
+      const newId = await ensureCategory(pending.name, pending.description);
+      if (!newId) return;
+      data.category_id = newId;
     }
 
     if (isVendorCategory) {
@@ -117,7 +130,8 @@ export const ExpenseFormDialog = ({ open, onClose, onSubmit, initialData }: Prop
     onSubmit(data);
   };
 
-  const hasOtherCategory = categories?.some(c => c.name.toLowerCase() === 'other');
+  const hasCategory = (name: string) =>
+    categories?.some(c => c.name.toLowerCase() === name.toLowerCase());
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -136,7 +150,13 @@ export const ExpenseFormDialog = ({ open, onClose, onSubmit, initialData }: Prop
               {categories?.map(cat => (
                 <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
               ))}
-              {!isCategoriesLoading && !hasOtherCategory && (
+              {!isCategoriesLoading && !hasCategory('Home Expense') && (
+                <MenuItem value="new-home-expense">Home Expense</MenuItem>
+              )}
+              {!isCategoriesLoading && !hasCategory('Business Expense') && (
+                <MenuItem value="new-business-expense">Business Expense</MenuItem>
+              )}
+              {!isCategoriesLoading && !hasCategory('Other') && (
                 <MenuItem value="new-other">Other</MenuItem>
               )}
             </Select>
