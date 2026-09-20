@@ -140,7 +140,7 @@ export const StockHistoryDialog = ({ open, item, onClose }: Props) => {
                                   <Typography variant="body2">{movement.reference.label}</Typography>
                                 )}
                                 {movement.reference.subtitle ? (
-                                  <Typography variant="caption" color="text.secondary" display="block">
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                                     {movement.reference.subtitle}
                                   </Typography>
                                 ) : null}
