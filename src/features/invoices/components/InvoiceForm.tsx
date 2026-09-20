@@ -355,15 +355,21 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
               />
               <FormControl sx={{ width: 120 }}>
                 <InputLabel>Unit</InputLabel>
-                <Select
-                  label="Unit"
-                  {...register(`items.${index}.unit`)}
-                  defaultValue={initialData?.items[index]?.unit || 'Piece'}
-                >
-                  {['Piece', 'Box', 'Kg', 'Liter', 'Meter', 'Dozen', 'Pack', 'Roll', 'Bundle'].map(u => (
-                    <MenuItem key={u} value={u}>{u}</MenuItem>
-                  ))}
-                </Select>
+                <Controller
+                  name={`items.${index}.unit`}
+                  control={control}
+                  render={({ field: unitField }) => (
+                    <Select
+                      label="Unit"
+                      value={unitField.value || 'Piece'}
+                      onChange={unitField.onChange}
+                    >
+                      {['Piece', 'Box', 'Kg', 'Liter', 'Meter', 'Dozen', 'Pack', 'Roll', 'Bundle'].map(u => (
+                        <MenuItem key={u} value={u}>{u}</MenuItem>
+                      ))}
+                    </Select>
+                  )}
+                />
               </FormControl>
               <TextField
                 sx={{ width: 100 }}

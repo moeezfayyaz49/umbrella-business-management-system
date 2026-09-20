@@ -40,3 +40,13 @@ export interface InventoryMovement {
   notes?: string | null;
   created_at: string;
 }
+
+export interface InventoryMovementReference {
+  label: string;
+  path?: string;
+  subtitle?: string;
+}
+
+export interface InventoryMovementEnriched extends InventoryMovement {
+  reference?: InventoryMovementReference | null;
+}
