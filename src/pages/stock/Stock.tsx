@@ -1,14 +1,17 @@
 import {
   Box, Typography, Paper, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, CircularProgress, Chip, Button, TextField, Link
+  TableHead, TableRow, CircularProgress, Chip, Button, TextField, Link, IconButton, Tooltip
 } from '@mui/material';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import UndoIcon from '@mui/icons-material/Undo';
 import SearchIcon from '@mui/icons-material/Search';
+import HistoryIcon from '@mui/icons-material/History';
 import InputAdornment from '@mui/material/InputAdornment';
 import { useMemo, useState } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAllStock } from '../../features/inventory/hooks/useInventory';
+import { StockHistoryDialog } from '../../features/inventory/components/StockHistoryDialog';
+import type { InventoryItem } from '../../features/inventory/types';
 import { useSettings } from '../../features/settings/hooks/useSettings';
 import { formatCurrency } from '../../utils/currency';
 import { formatUnitAvailability } from '../../utils/unitConversion';
@@ -18,6 +21,7 @@ export const Stock = () => {
   const { data: stock, isLoading } = useAllStock();
   const { data: settings } = useSettings();
   const [search, setSearch] = useState('');
+  const [historyItem, setHistoryItem] = useState<InventoryItem | null>(null);
 
   const filteredStock = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -57,7 +61,7 @@ export const Stock = () => {
         <Box>
           <Typography variant="h4">Stock</Typography>
           <Typography variant="body2" color="text.secondary">
-            Items from new purchases. Buying the same item again adds to existing quantity.
+            Items from new purchases. Buying the same item again adds to existing quantity. Open History to see invoice and return usage.
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -101,12 +105,13 @@ export const Stock = () => {
               <TableCell align="right">Remaining Weight</TableCell>
               <TableCell align="right">Unit Cost</TableCell>
               <TableCell>Status</TableCell>
+              <TableCell align="center">Track</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {filteredStock.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} align="center">
+                <TableCell colSpan={8} align="center">
                   {(stock || []).length === 0
                     ? 'No stock yet. Create a new purchase to add items to stock.'
                     : 'No stock items match your search.'}
@@ -117,12 +122,17 @@ export const Stock = () => {
                 const hasQty = Number(item.quantity_remaining) > 0;
                 const hasWeight = item.weight_remaining != null && Number(item.weight_remaining) > 0;
                 const available = hasQty || hasWeight;
+                const used =
+                  Number(item.quantity_remaining) < Number(item.quantity_original) ||
+                  (item.weight_original != null &&
+                    item.weight_remaining != null &&
+                    Number(item.weight_remaining) < Number(item.weight_original));
                 const purchaseRefs = item.purchase_refs?.length
                   ? item.purchase_refs
                   : (item.purchase ? [item.purchase] : []);
 
                 return (
-                  <TableRow key={item.id}>
+                  <TableRow key={item.id} hover>
                     <TableCell>
                       <Typography sx={{ fontWeight: 600 }}>{item.description}</Typography>
                       <Typography variant="caption" color="text.secondary">
@@ -160,11 +170,28 @@ export const Stock = () => {
                     </TableCell>
                     <TableCell align="right">{formatCurrency(item.unit_cost, settings?.currency)}</TableCell>
                     <TableCell>
-                      <Chip
-                        size="small"
-                        label={available ? 'Available' : 'Depleted'}
-                        color={available ? 'success' : 'default'}
-                      />
+                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                        <Chip
+                          size="small"
+                          label={available ? 'Available' : 'Depleted'}
+                          color={available ? 'success' : 'default'}
+                        />
+                        {used ? (
+                          <Chip size="small" label="Used" color="primary" variant="outlined" />
+                        ) : null}
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Tooltip title="View usage history">
+                        <IconButton
+                          size="small"
+                          color={used ? 'primary' : 'default'}
+                          onClick={() => setHistoryItem(item)}
+                          aria-label={`View history for ${item.description}`}
+                        >
+                          <HistoryIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                     </TableCell>
                   </TableRow>
                 );
@@ -173,6 +200,12 @@ export const Stock = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <StockHistoryDialog
+        open={!!historyItem}
+        item={historyItem}
+        onClose={() => setHistoryItem(null)}
+      />
     </Box>
   );
 };

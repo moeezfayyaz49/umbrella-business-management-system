@@ -1,5 +1,5 @@
 import { supabase } from '../../../lib/supabase';
-import type { InventoryItem } from '../types';
+import type { InventoryItem, InventoryMovement, InventoryMovementEnriched } from '../types';
 import { calculateLineTotal } from '../../../utils/lineTotal';
 import { formatUnitAvailability, toStockQuantity } from '../../../utils/unitConversion';
 
@@ -165,6 +165,107 @@ export const inventoryService = {
     if (error) throw error;
     const [enriched] = await attachPurchaseRefs([data as InventoryItem]);
     return enriched;
+  },
+
+  getMovementsForItem: async (inventoryItemId: string): Promise<InventoryMovementEnriched[]> => {
+    const { data: movements, error } = await supabase
+      .from('inventory_movements')
+      .select('*')
+      .eq('inventory_item_id', inventoryItemId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    const rows = (movements || []) as InventoryMovement[];
+    if (rows.length === 0) return [];
+
+    const invoiceIds = new Set<string>();
+    const purchaseIds = new Set<string>();
+    const vendorReturnIds = new Set<string>();
+    const clientReturnIds = new Set<string>();
+
+    rows.forEach((m) => {
+      if (!m.reference_id) return;
+      if (m.reference_type === 'invoice') invoiceIds.add(m.reference_id);
+      else if (m.reference_type === 'purchase') purchaseIds.add(m.reference_id);
+      else if (m.reference_type === 'vendor_return') vendorReturnIds.add(m.reference_id);
+      else if (m.reference_type === 'client_return') clientReturnIds.add(m.reference_id);
+    });
+
+    const invoiceMap = new Map<string, { id: string; invoice_number: string; date: string; clients?: { name: string } | null }>();
+    const purchaseMap = new Map<string, { id: string; purchase_number: string; date: string }>();
+    const vendorReturnMap = new Map<string, { id: string; return_number: string; date: string }>();
+    const clientReturnMap = new Map<string, { id: string; return_number: string; date: string }>();
+
+    if (invoiceIds.size > 0) {
+      const { data } = await supabase
+        .from('invoices')
+        .select('id, invoice_number, date, clients(name)')
+        .in('id', Array.from(invoiceIds));
+      (data || []).forEach((inv) => {
+        invoiceMap.set(inv.id, {
+          id: inv.id,
+          invoice_number: inv.invoice_number,
+          date: inv.date,
+          clients: Array.isArray(inv.clients) ? inv.clients[0] || null : inv.clients,
+        });
+      });
+    }
+    if (purchaseIds.size > 0) {
+      const { data } = await supabase
+        .from('purchases')
+        .select('id, purchase_number, date')
+        .in('id', Array.from(purchaseIds));
+      (data || []).forEach((p) => purchaseMap.set(p.id, p));
+    }
+    if (vendorReturnIds.size > 0) {
+      const { data } = await supabase
+        .from('vendor_returns')
+        .select('id, return_number, date')
+        .in('id', Array.from(vendorReturnIds));
+      (data || []).forEach((r) => vendorReturnMap.set(r.id, r));
+    }
+    if (clientReturnIds.size > 0) {
+      const { data } = await supabase
+        .from('client_returns')
+        .select('id, return_number, date')
+        .in('id', Array.from(clientReturnIds));
+      (data || []).forEach((r) => clientReturnMap.set(r.id, r));
+    }
+
+    return rows.map((m) => {
+      let reference: InventoryMovementEnriched['reference'] = null;
+      if (m.reference_id && m.reference_type === 'invoice') {
+        const inv = invoiceMap.get(m.reference_id);
+        reference = inv
+          ? {
+            label: inv.invoice_number,
+            path: `/invoices/${inv.id}`,
+            subtitle: [inv.clients?.name, inv.date].filter(Boolean).join(' · '),
+          }
+          : { label: 'Invoice', path: `/invoices/${m.reference_id}` };
+      } else if (m.reference_id && m.reference_type === 'purchase') {
+        const purchase = purchaseMap.get(m.reference_id);
+        reference = purchase
+          ? {
+            label: purchase.purchase_number,
+            path: `/purchases/${purchase.id}`,
+            subtitle: purchase.date,
+          }
+          : { label: 'Purchase', path: `/purchases/${m.reference_id}` };
+      } else if (m.reference_id && m.reference_type === 'vendor_return') {
+        const ret = vendorReturnMap.get(m.reference_id);
+        reference = ret
+          ? { label: ret.return_number, subtitle: ret.date }
+          : { label: 'Vendor return' };
+      } else if (m.reference_id && m.reference_type === 'client_return') {
+        const ret = clientReturnMap.get(m.reference_id);
+        reference = ret
+          ? { label: ret.return_number, subtitle: ret.date }
+          : { label: 'Client return' };
+      }
+
+      return { ...m, reference };
+    });
   },
 
   /** Total monetary value of remaining purchase stock (qty/weight × unit cost). */

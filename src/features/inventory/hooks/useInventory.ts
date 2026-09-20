@@ -22,3 +22,11 @@ export const usePurchaseStock = (purchaseId: string) => {
     enabled: !!purchaseId,
   });
 };
+
+export const useInventoryMovements = (inventoryItemId: string | null) => {
+  return useQuery({
+    queryKey: ['inventory', 'movements', inventoryItemId],
+    queryFn: () => inventoryService.getMovementsForItem(inventoryItemId!),
+    enabled: !!inventoryItemId,
+  });
+};
