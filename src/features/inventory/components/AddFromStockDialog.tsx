@@ -1,8 +1,9 @@
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button,
   TextField, Box, Typography, Checkbox, FormControlLabel, CircularProgress, Alert,
-  ToggleButton, ToggleButtonGroup
+  ToggleButton, ToggleButtonGroup, InputAdornment
 } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 import { useEffect, useMemo, useState } from 'react';
 import { useAllStock } from '../hooks/useInventory';
 import type { InventoryItem } from '../types';
@@ -59,10 +60,12 @@ export const AddFromStockDialog = ({
   const { data: stock, isLoading } = useAllStock();
   const { data: settings } = useSettings();
   const [selected, setSelected] = useState<Record<string, SelectedState>>({});
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     if (!open) {
       setSelected({});
+      setSearch('');
     }
   }, [open]);
 
@@ -83,6 +86,24 @@ export const AddFromStockDialog = ({
       return { item, availableQty, availableWeight };
     }).filter((row) => row.availableQty > 0 || (row.availableWeight != null && row.availableWeight > 0));
   }, [stock, reservedByForm, stockCredit]);
+
+  const filteredRows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter(({ item }) => {
+      const haystack = [
+        item.description,
+        item.unit,
+        item.color,
+        item.vendor?.name,
+        item.purchase?.purchase_number,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [rows, search]);
 
   const toggleItem = (item: InventoryItem, availableQty: number, availableWeight: number | null) => {
     setSelected((prev) => {
@@ -178,7 +199,26 @@ export const AddFromStockDialog = ({
           <Alert severity="info">No available stock. Create a new purchase to add stock.</Alert>
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {rows.map(({ item, availableQty, availableWeight }) => {
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Search by item, purchase, vendor, color..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              autoFocus
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon fontSize="small" />
+                    </InputAdornment>
+                  ),
+                },
+              }}
+            />
+            {filteredRows.length === 0 ? (
+              <Alert severity="info">No stock items match your search.</Alert>
+            ) : filteredRows.map(({ item, availableQty, availableWeight }) => {
               const state = selected[item.id];
               const checked = !!state?.checked;
               const stockUnit = item.unit || 'Piece';
