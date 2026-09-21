@@ -124,11 +124,17 @@ export const AddFromStockDialog = ({
     });
   };
 
+  const maxQtyForSellUnit = (availableQty: number, stockUnit: string, sellUnit: string) => {
+    const unit = sellUnit.toLowerCase();
+    if (unit === 'piece' || unit === 'pieces') {
+      return toPieceQuantity(availableQty, stockUnit);
+    }
+    return availableQty;
+  };
+
   const setSellUnit = (item: InventoryItem, availableQty: number, sellUnit: string) => {
     const stockUnit = item.unit || 'Piece';
-    const maxInSellUnit = sellUnit.toLowerCase() === 'piece' || sellUnit.toLowerCase() === 'pieces'
-      ? toPieceQuantity(availableQty, stockUnit)
-      : availableQty;
+    const maxInSellUnit = maxQtyForSellUnit(availableQty, stockUnit, sellUnit);
 
     setSelected((prev) => ({
       ...prev,
@@ -140,11 +146,36 @@ export const AddFromStockDialog = ({
     }));
   };
 
-  const handleAdd = () => {
-    const picks: StockPickSelection[] = [];
-    for (const { item, availableQty, availableWeight } of rows) {
+  const setQuantity = (itemId: string, value: number, maxQty: number) => {
+    const next = Number.isFinite(value) ? value : 0;
+    const clamped = Math.max(0, Math.min(next, maxQty));
+    setSelected((prev) => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        quantity: clamped,
+      },
+    }));
+  };
+
+  const setWeight = (itemId: string, value: number, maxWeight: number | null) => {
+    const next = Number.isFinite(value) ? value : 0;
+    const clamped = maxWeight == null
+      ? Math.max(0, next)
+      : Math.max(0, Math.min(next, maxWeight));
+    setSelected((prev) => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        weight: clamped,
+      },
+    }));
+  };
+
+  const hasValidSelection = useMemo(() => {
+    return rows.some(({ item, availableQty, availableWeight }) => {
       const state = selected[item.id];
-      if (!state?.checked) continue;
+      if (!state?.checked) return false;
 
       const pricingMode = item.pricing_mode || 'quantity';
       const quantity = Number(state.quantity) || 0;
@@ -153,14 +184,37 @@ export const AddFromStockDialog = ({
       const sellUnit = state.sellUnit || stockUnit;
 
       if (pricingMode === 'weight') {
-        if (weight <= 0 || (availableWeight != null && weight > availableWeight + 0.0001)) continue;
-      } else {
-        const stockQtyNeeded = toStockQuantity({
-          stockUnit,
-          invoiceUnit: sellUnit,
-          invoiceQuantity: quantity,
-        });
-        if (quantity <= 0 || stockQtyNeeded > availableQty + 0.0001) continue;
+        return weight > 0 && (availableWeight == null || weight <= availableWeight + 0.0001);
+      }
+
+      const stockQtyNeeded = toStockQuantity({
+        stockUnit,
+        invoiceUnit: sellUnit,
+        invoiceQuantity: quantity,
+      });
+      return quantity > 0 && stockQtyNeeded <= availableQty + 0.0001;
+    });
+  }, [rows, selected]);
+
+  const handleAdd = () => {
+    const picks: StockPickSelection[] = [];
+    for (const { item, availableQty, availableWeight } of rows) {
+      const state = selected[item.id];
+      if (!state?.checked) continue;
+
+      const pricingMode = item.pricing_mode || 'quantity';
+      const stockUnit = item.unit || 'Piece';
+      const sellUnit = state.sellUnit || stockUnit;
+      const maxQty = maxQtyForSellUnit(availableQty, stockUnit, sellUnit);
+      const quantity = Math.min(Number(state.quantity) || 0, maxQty);
+      const weight = availableWeight != null
+        ? Math.min(Number(state.weight) || 0, availableWeight)
+        : Number(state.weight) || 0;
+
+      if (pricingMode === 'weight') {
+        if (weight <= 0) continue;
+      } else if (quantity <= 0) {
+        continue;
       }
 
       picks.push({
@@ -223,10 +277,23 @@ export const AddFromStockDialog = ({
               const checked = !!state?.checked;
               const stockUnit = item.unit || 'Piece';
               const sellUnit = state?.sellUnit || stockUnit;
-              const maxQty = sellUnit.toLowerCase() === 'piece' || sellUnit.toLowerCase() === 'pieces'
-                ? toPieceQuantity(availableQty, stockUnit)
-                : availableQty;
+              const maxQty = maxQtyForSellUnit(availableQty, stockUnit, sellUnit);
               const pieceCost = costPerInvoiceUnit(Number(item.unit_cost) || 0, stockUnit, 'Piece');
+              const qtyHelperParts: string[] = [
+                `Available: ${maxQty} ${sellUnit}`,
+              ];
+              if (canSellAsPieces(stockUnit) && sellUnit.toLowerCase() === 'piece') {
+                qtyHelperParts.push(
+                  `Uses ${(toStockQuantity({
+                    stockUnit,
+                    invoiceUnit: 'Piece',
+                    invoiceQuantity: Number(state?.quantity) || 0,
+                  })).toFixed(4)} ${stockUnit}`
+                );
+              }
+              const weightHelper = availableWeight != null
+                ? `Available: ${availableWeight} ${item.weight_unit || ''}`
+                : undefined;
 
               return (
                 <Box
@@ -260,7 +327,7 @@ export const AddFromStockDialog = ({
                     }
                   />
                   {checked && (
-                    <Box sx={{ display: 'flex', gap: 2, mt: 1, ml: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', gap: 2, mt: 1, ml: 4, flexWrap: 'wrap', alignItems: 'flex-start' }}>
                       {canSellAsPieces(stockUnit) && item.pricing_mode !== 'weight' && (
                         <ToggleButtonGroup
                           exclusive
@@ -280,22 +347,11 @@ export const AddFromStockDialog = ({
                         type="number"
                         size="small"
                         value={state.quantity}
-                        onChange={(e) =>
-                          setSelected((prev) => ({
-                            ...prev,
-                            [item.id]: {
-                              ...prev[item.id],
-                              quantity: Number(e.target.value) || 0,
-                            },
-                          }))
-                        }
+                        onChange={(e) => setQuantity(item.id, Number(e.target.value), maxQty)}
                         slotProps={{ htmlInput: { min: 0, max: maxQty, step: 'any' } }}
-                        helperText={
-                          canSellAsPieces(stockUnit) && sellUnit === 'Piece'
-                            ? `Uses ${(toStockQuantity({ stockUnit, invoiceUnit: 'Piece', invoiceQuantity: Number(state.quantity) || 0 })).toFixed(4)} ${stockUnit}`
-                            : undefined
-                        }
-                        sx={{ width: 160 }}
+                        helperText={qtyHelperParts.join(' · ')}
+                        error={Number(state.quantity) > maxQty}
+                        sx={{ width: 200 }}
                       />
                       {(item.pricing_mode === 'weight' || availableWeight != null) && (
                         <TextField
@@ -303,17 +359,11 @@ export const AddFromStockDialog = ({
                           type="number"
                           size="small"
                           value={state.weight}
-                          onChange={(e) =>
-                            setSelected((prev) => ({
-                              ...prev,
-                              [item.id]: {
-                                ...prev[item.id],
-                                weight: Number(e.target.value) || 0,
-                              },
-                            }))
-                          }
+                          onChange={(e) => setWeight(item.id, Number(e.target.value), availableWeight)}
                           slotProps={{ htmlInput: { min: 0, max: availableWeight ?? undefined, step: 'any' } }}
-                          sx={{ width: 180 }}
+                          helperText={weightHelper}
+                          error={availableWeight != null && Number(state.weight) > availableWeight}
+                          sx={{ width: 200 }}
                         />
                       )}
                     </Box>
@@ -326,7 +376,7 @@ export const AddFromStockDialog = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={handleAdd} disabled={rows.length === 0}>
+        <Button variant="contained" onClick={handleAdd} disabled={!hasValidSelection}>
           Add Selected
         </Button>
       </DialogActions>

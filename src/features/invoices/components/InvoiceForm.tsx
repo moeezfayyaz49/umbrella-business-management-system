@@ -76,7 +76,7 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
     }
   }, [settings?.invoice_prefix, initialData, reset]);
 
-  const { fields, append, insert, remove } = useFieldArray({
+  const { fields, append, insert, remove, replace } = useFieldArray({
     control,
     name: 'items',
   });
@@ -138,26 +138,25 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
       !watchItems?.[0]?.description &&
       !watchItems?.[0]?.inventory_item_id;
 
-    picks.forEach((pick, index) => {
-      const line = {
-        description: pick.description,
-        quantity: pick.quantity,
-        unit_price: pick.unit_price,
-        cost: pick.cost,
-        unit: pick.unit,
-        weight: pick.weight,
-        weight_unit: pick.weight_unit || '',
-        color: pick.color || '',
-        pricing_mode: pick.pricing_mode,
-        inventory_item_id: pick.inventory_item_id,
-      };
+    const lines = picks.map((pick) => ({
+      description: pick.description,
+      quantity: pick.quantity,
+      unit_price: pick.unit_price,
+      cost: pick.cost,
+      unit: pick.unit,
+      weight: pick.weight,
+      weight_unit: pick.weight_unit || '',
+      color: pick.color || '',
+      pricing_mode: pick.pricing_mode,
+      inventory_item_id: pick.inventory_item_id,
+    }));
 
-      if (isBlankOnlyItem && index === 0) {
-        setValue('items.0', line);
-      } else {
-        append(line);
-      }
-    });
+    // Remount rows instead of setValue so MUI floating labels shrink correctly.
+    if (isBlankOnlyItem) {
+      replace(lines);
+    } else {
+      lines.forEach((line) => append(line));
+    }
   };
 
   useEffect(() => {
@@ -350,6 +349,11 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
                 sx={{ flexGrow: 1, minWidth: 200 }}
                 label="Description"
                 {...register(`items.${index}.description`)}
+                slotProps={{
+                  inputLabel: {
+                    shrink: watchItems?.[index]?.description ? true : undefined,
+                  },
+                }}
                 error={!!errors.items?.[index]?.description}
                 helperText={errors.items?.[index]?.description?.message}
               />
@@ -375,7 +379,12 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
                 sx={{ width: 100 }}
                 label="Qty"
                 type="number"
-                slotProps={{ htmlInput: { step: 'any' } }}
+                slotProps={{
+                  htmlInput: { step: 'any' },
+                  inputLabel: {
+                    shrink: watchItems?.[index]?.quantity != null ? true : undefined,
+                  },
+                }}
                 {...register(`items.${index}.quantity`, { valueAsNumber: true })}
                 error={!!errors.items?.[index]?.quantity}
               />
@@ -383,7 +392,12 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
                 sx={{ width: 150 }}
                 label={pricingMode === 'weight' ? `Price / ${weightUnit}` : 'Unit Price'}
                 type="number"
-                slotProps={{ htmlInput: { step: 'any', inputMode: 'decimal', min: 0 } }}
+                slotProps={{
+                  htmlInput: { step: 'any', inputMode: 'decimal', min: 0 },
+                  inputLabel: {
+                    shrink: watchItems?.[index]?.unit_price != null ? true : undefined,
+                  },
+                }}
                 {...register(`items.${index}.unit_price`, {
                   setValueAs: (v) => (v === '' || v === null || v === undefined ? 0 : Number(v)),
                 })}
@@ -410,13 +424,20 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
                 label={pricingMode === 'weight' ? 'Total Weight' : 'Weight (Optional)'}
                 type="number"
                 required={pricingMode === 'weight'}
-                slotProps={{ htmlInput: { step: 'any' } }}
+                slotProps={{
+                  htmlInput: { step: 'any' },
+                  inputLabel: {
+                    shrink: watchItems?.[index]?.weight != null ? true : undefined,
+                  },
+                }}
                 {...register(`items.${index}.weight`, { setValueAs: v => v === '' ? undefined : Number(v) })}
                 error={!!errors.items?.[index]?.weight}
                 helperText={errors.items?.[index]?.weight?.message}
               />
               <FormControl sx={{ width: 150 }} error={!!errors.items?.[index]?.weight_unit}>
-                <InputLabel>Weight Unit</InputLabel>
+                <InputLabel shrink={watchItems?.[index]?.weight_unit ? true : undefined}>
+                  Weight Unit
+                </InputLabel>
                 <Controller
                   name={`items.${index}.weight_unit`}
                   control={control}
@@ -438,6 +459,11 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
                 sx={{ width: 200 }}
                 label="Color (Optional)"
                 {...register(`items.${index}.color`)}
+                slotProps={{
+                  inputLabel: {
+                    shrink: watchItems?.[index]?.color ? true : undefined,
+                  },
+                }}
                 error={!!errors.items?.[index]?.color}
                 helperText={errors.items?.[index]?.color?.message}
               />
