@@ -88,6 +88,7 @@ CREATE TABLE public.invoices (
   total_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
   paid_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
   remaining_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
@@ -113,6 +114,7 @@ CREATE TABLE public.purchases (
   total_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
   paid_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
   remaining_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );

@@ -101,6 +101,14 @@ export const InvoiceView = () => {
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 4, mr: 2 }}>
         <Box sx={{ flexGrow: 1, maxWidth: 400 }}>
+          {invoice.notes && (
+            <Box sx={{ mb: invoice.transport_company ? 2 : 0 }}>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>GENERAL NOTE</Typography>
+              <Paper variant="outlined" sx={{ p: 2, backgroundColor: 'rgba(0,0,0,0.02)' }}>
+                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{invoice.notes}</Typography>
+              </Paper>
+            </Box>
+          )}
           {invoice.transport_company && (
             <Box>
               <Typography variant="subtitle2" color="text.secondary" gutterBottom>TRANSPORT DETAILS</Typography>

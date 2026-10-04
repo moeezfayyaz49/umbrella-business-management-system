@@ -29,6 +29,7 @@ export interface Purchase {
   transport_charges?: number;
   transport_paid_by?: 'Vendor' | 'Receiver';
   transport_payment_status?: 'Paid' | 'Pending';
+  notes?: string;
   items: PurchaseItem[];
   vendor?: {
     id: string;

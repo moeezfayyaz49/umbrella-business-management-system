@@ -62,6 +62,7 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
       transport_charges: 0,
       transport_paid_by: 'Client',
       transport_remarks: '',
+      notes: '',
       items: [{ description: '', quantity: 1, unit_price: 0, unit: 'Piece', pricing_mode: 'quantity' }],
     },
   });
@@ -174,6 +175,7 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
         transport_charges: initialData.transport_charges || 0,
         transport_paid_by: initialData.transport_paid_by || 'Client',
         transport_remarks: initialData.transport_remarks || '',
+        notes: initialData.notes || '',
         items: initialData.items.map(i => ({
           id: i.id,
           description: i.description,
@@ -240,6 +242,17 @@ export const InvoiceForm = ({ initialData, onSubmit, onCancel }: Props) => {
               {...register('date')}
               error={!!errors.date}
               helperText={errors.date?.message}
+            />
+          </Box>
+          <Box sx={{ gridColumn: '1 / -1' }}>
+            <TextField
+              fullWidth
+              label="General Note"
+              multiline
+              rows={3}
+              {...register('notes')}
+              error={!!errors.notes}
+              helperText={errors.notes?.message}
             />
           </Box>
         </Box>

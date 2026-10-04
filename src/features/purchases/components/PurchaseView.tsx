@@ -79,6 +79,14 @@ export const PurchaseView = ({ purchase }: { purchase: Purchase }) => {
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 4 }}>
         <Box sx={{ flexGrow: 1, maxWidth: 400 }}>
+          {purchase.notes && (
+            <Box sx={{ mb: purchase.transport_company ? 2 : 0 }}>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>GENERAL NOTE</Typography>
+              <Paper variant="outlined" sx={{ p: 2, backgroundColor: 'rgba(0,0,0,0.02)' }}>
+                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{purchase.notes}</Typography>
+              </Paper>
+            </Box>
+          )}
           {purchase.transport_company && (
             <Box>
               <Typography variant="subtitle2" color="text.secondary" gutterBottom>TRANSPORT DETAILS</Typography>

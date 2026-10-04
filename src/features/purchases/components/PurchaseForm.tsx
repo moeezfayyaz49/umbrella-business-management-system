@@ -57,6 +57,7 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
       transport_charges: 0,
       transport_paid_by: 'Vendor',
       transport_payment_status: 'Pending',
+      notes: '',
       items: [{ description: '', quantity: 1, unit_price: 0, unit: 'Piece', pricing_mode: 'quantity', inventory_item_id: null }],
     },
   });
@@ -119,6 +120,7 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
         transport_charges: initialData.transport_charges || 0,
         transport_paid_by: initialData.transport_paid_by || 'Vendor',
         transport_payment_status: initialData.transport_payment_status || 'Pending',
+        notes: initialData.notes || '',
         items: initialData.items.map(i => ({
           id: i.id,
           description: i.description,
@@ -186,6 +188,17 @@ export const PurchaseForm = ({ initialData, onSubmit, onCancel }: Props) => {
               {...register('date')}
               error={!!errors.date}
               helperText={errors.date?.message}
+            />
+          </Box>
+          <Box sx={{ gridColumn: '1 / -1' }}>
+            <TextField
+              fullWidth
+              label="General Note"
+              multiline
+              rows={3}
+              {...register('notes')}
+              error={!!errors.notes}
+              helperText={errors.notes?.message}
             />
           </Box>
         </Box>
