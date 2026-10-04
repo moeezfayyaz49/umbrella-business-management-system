@@ -31,6 +31,7 @@ export interface Invoice {
   transport_charges?: number;
   transport_paid_by?: 'Client' | 'Sender';
   transport_remarks?: string;
+  notes?: string;
   items: InvoiceItem[];
   clients?: { name: string; city: string };
   created_at: string;

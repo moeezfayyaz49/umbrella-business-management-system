@@ -49,6 +49,7 @@ export const purchaseSchema = z.object({
   transport_charges: z.number().min(0, 'Transport charges cannot be negative').optional(),
   transport_paid_by: z.enum(['Vendor', 'Receiver']).optional(),
   transport_payment_status: z.enum(['Paid', 'Pending']).optional(),
+  notes: z.string().optional(),
 });
 
 export type PurchaseItemFormInputs = z.infer<typeof purchaseItemSchema>;

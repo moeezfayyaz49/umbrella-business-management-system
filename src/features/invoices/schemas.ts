@@ -46,6 +46,7 @@ export const invoiceSchema = z.object({
   transport_charges: z.number().min(0, 'Transport charges cannot be negative').optional(),
   transport_paid_by: z.enum(['Client', 'Sender']).optional(),
   transport_remarks: z.string().optional(),
+  notes: z.string().optional(),
 });
 
 export type InvoiceItemFormInputs = z.infer<typeof invoiceItemSchema>;
